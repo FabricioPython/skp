@@ -1,5 +1,5 @@
-# Firebase Studio
+# Stock Counter
 
-This is a NextJS starter in Firebase Studio.
+This is a Next.js application built with Firebase Studio.
 
-To get started, take a look at src/app/page.tsx.
+It's a simple tool to count stock items by scanning a start and end barcode.
