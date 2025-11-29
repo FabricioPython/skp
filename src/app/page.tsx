@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import BarcodeScanner from "@/components/barcode-scanner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 type ScanTarget = "initial" | "final";
 
@@ -28,6 +30,7 @@ export default function Home() {
   const [scanningFor, setScanningFor] = useState<ScanTarget | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [count, setCount] = useState<bigint | null>(null);
+  const [category, setCategory] = useState<string | null>(null);
 
   const handleScan = (result: string) => {
     setError(null);
@@ -71,6 +74,7 @@ export default function Home() {
     setFinalCode(null);
     setError(null);
     setCount(null);
+    setCategory(null);
   }, []);
 
   return (
@@ -134,6 +138,21 @@ export default function Home() {
             >
               <Calculator className="mr-2 h-4 w-4" /> Contar
             </Button>
+            
+            <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="a" id="r1" />
+                <Label htmlFor="r1">Tipo A</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="b" id="r2" />
+                <Label htmlFor="r2">Tipo B</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="c" id="r3" />
+                <Label htmlFor="r3">Tipo C</Label>
+              </div>
+            </RadioGroup>
 
             {error && (
               <Alert variant="destructive">
