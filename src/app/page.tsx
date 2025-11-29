@@ -21,6 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import BarcodeScanner from "@/components/barcode-scanner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 type ScanTarget = "initial" | "final";
 
@@ -88,6 +89,8 @@ export default function Home() {
       resetAll();
     }
   };
+  
+  const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-8">
@@ -207,6 +210,11 @@ export default function Home() {
                       <span className="font-bold text-lg">{total.toString()}</span>
                     </div>
                   ))}
+                  <Separator className="my-4 bg-border" />
+                  <div className="flex justify-between items-center p-2">
+                    <span className="font-bold text-lg">Total Geral</span>
+                    <span className="font-extrabold text-xl">{grandTotal.toString()}</span>
+                  </div>
                 </CardContent>
               </Card>
             )}
