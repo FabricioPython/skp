@@ -23,6 +23,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import axios from "axios";
 
 type ScanTarget = "initial" | "final";
 
@@ -108,11 +109,8 @@ export default function Home() {
     setAgencyName(null);
     setReportDate(null);
     try {
-      const response = await fetch(`https://gxtlxh2du6.execute-api.us-east-1.amazonaws.com/agencia/${agencyNumber}`);
-      if (!response.ok) {
-        throw new Error(`Agency not found or API error. Status: ${response.status}`);
-      }
-      const data = await response.json();
+      const response = await axios.get(`https://gxtlxh2du6.execute-api.us-east-1.amazonaws.com/agencia/${agencyNumber}`);
+      const data = response.data;
       if (data && data.length > 0 && data[0].Nome) {
         setAgencyName(data[0].Nome);
         setReportDate(new Date().toLocaleDateString());
@@ -347,3 +345,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
