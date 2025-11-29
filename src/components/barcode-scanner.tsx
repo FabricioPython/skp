@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { BrowserMultiFormatReader } from "@zxing/library";
+import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import { Result } from "@zxing/library";
 import { useZxing } from "react-zxing";
 
@@ -17,8 +17,13 @@ export default function BarcodeScanner({
 }: BarcodeScannerProps) {
   const { toast } = useToast();
   
+  const hints = new Map();
+  const formats = [BarcodeFormat.CODE_128];
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+  
   const { ref } = useZxing({
     paused,
+    hints,
     onDecodeResult(result: Result) {
       navigator.vibrate?.(100);
       onScan(result.getText());
