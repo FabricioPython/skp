@@ -110,13 +110,13 @@ export default function Home() {
     try {
       const response = await fetch(`https://gxtlxh2du6.execute-api.us-east-1.amazonaws.com/agencia/${agencyNumber}`);
       if (!response.ok) {
-        throw new Error("Agency not found or API error.");
+        throw new Error(`Agency not found or API error. Status: ${response.status}`);
       }
       const data = await response.json();
       setAgencyName(data.nome_agencia || "Name not found");
       setReportDate(new Date().toLocaleDateString());
     } catch (e) {
-      setAgencyError((e as Error).message || "Failed to fetch agency name.");
+      setAgencyError((e as Error).message || "Failed to fetch agency name. Check your connection or the API endpoint.");
     } finally {
       setIsFetchingAgency(false);
     }
