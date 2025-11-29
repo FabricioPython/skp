@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Camera, RefreshCcw, Calculator, Save, Archive } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Save, Archive, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,6 +34,12 @@ export default function Home() {
   const [count, setCount] = useState<bigint | null>(null);
   const [category, setCategory] = useState<string | null>(null);
   const [savedCounts, setSavedCounts] = useState<Record<string, bigint>>({});
+  
+  const [agencyNumber, setAgencyNumber] = useState<string>("");
+  const [agencyName, setAgencyName] = useState<string | null>(null);
+  const [agencyError, setAgencyError] = useState<string | null>(null);
+  const [isFetchingAgency, setIsFetchingAgency] = useState(false);
+
 
   const handleScan = (result: string) => {
     setError(null);
@@ -91,6 +97,28 @@ export default function Home() {
     }
   };
   
+  const handleFetchAgency = async () => {
+    if (!agencyNumber) {
+      setAgencyError("Please enter an agency number.");
+      return;
+    }
+    setIsFetchingAgency(true);
+    setAgencyError(null);
+    setAgencyName(null);
+    try {
+      const response = await fetch(`https://gxtlxh2du6.execute-api.us-east-1.amazonaws.com/agencia/${agencyNumber}`);
+      if (!response.ok) {
+        throw new Error("Agency not found or API error.");
+      }
+      const data = await response.json();
+      setAgencyName(data.nome_agencia || "Name not found");
+    } catch (e) {
+      setAgencyError((e as Error).message || "Failed to fetch agency name.");
+    } finally {
+      setIsFetchingAgency(false);
+    }
+  };
+
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
   return (
@@ -220,7 +248,40 @@ export default function Home() {
               </Card>
             )}
             
-            <Input type="number" placeholder="Enter a number" className="mt-4" />
+            {Object.keys(savedCounts).length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Find Agency</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Enter agency number"
+                      value={agencyNumber}
+                      onChange={(e) => setAgencyNumber(e.target.value)}
+                      disabled={isFetchingAgency}
+                    />
+                    <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber}>
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {isFetchingAgency && <p>Loading...</p>}
+                  {agencyError && (
+                    <Alert variant="destructive">
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>{agencyError}</AlertDescription>
+                    </Alert>
+                  )}
+                  {agencyName && (
+                    <Alert>
+                      <AlertTitle>Agency Name</AlertTitle>
+                      <AlertDescription>{agencyName}</AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {(initialCode || finalCode) && (
               <div className="text-center">
