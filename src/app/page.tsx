@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Camera, RefreshCcw, Calculator } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Save, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,6 +31,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [count, setCount] = useState<bigint | null>(null);
   const [category, setCategory] = useState<string | null>(null);
+  const [savedCounts, setSavedCounts] = useState<Record<string, bigint>>({});
 
   const handleScan = (result: string) => {
     setError(null);
@@ -76,6 +77,17 @@ export default function Home() {
     setCount(null);
     setCategory(null);
   }, []);
+
+  const handleSave = () => {
+    if (category && count !== null) {
+      setSavedCounts(prevCounts => ({
+        ...prevCounts,
+        [category]: (prevCounts[category] || 0n) + count,
+      }));
+      // Reset for next count
+      resetAll();
+    }
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-8">
@@ -139,20 +151,28 @@ export default function Home() {
               <Calculator className="mr-2 h-4 w-4" /> Contar
             </Button>
             
-            <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="a" id="r1" />
-                <Label htmlFor="r1">Tipo A</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="b" id="r2" />
-                <Label htmlFor="r2">Tipo B</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="c" id="r3" />
-                <Label htmlFor="r3">Tipo C</Label>
-              </div>
-            </RadioGroup>
+            {count !== null && (
+              <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="a" id="r1" />
+                  <Label htmlFor="r1">Tipo A</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="b" id="r2" />
+                  <Label htmlFor="r2">Tipo B</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="c" id="r3" />
+                  <Label htmlFor="r3">Tipo C</Label>
+                </div>
+              </RadioGroup>
+            )}
+
+            {category && count !== null && (
+              <Button size="lg" onClick={handleSave}>
+                <Save className="mr-2 h-4 w-4" /> Salvar
+              </Button>
+            )}
 
             {error && (
               <Alert variant="destructive">
@@ -168,6 +188,25 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="text-center">
                   <p className="text-7xl font-bold">{count.toString()}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {Object.keys(savedCounts).length > 0 && (
+              <Card className="bg-secondary">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Archive className="h-5 w-5" />
+                    Saved Counts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {Object.entries(savedCounts).map(([cat, total]) => (
+                    <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
+                      <span className="font-medium">Tipo {cat.toUpperCase()}</span>
+                      <span className="font-bold text-lg">{total.toString()}</span>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             )}
