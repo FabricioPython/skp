@@ -30,13 +30,14 @@ export default function Home() {
 
   const handleScan = (result: string) => {
     setError(null);
-    
+    const sanitizedResult = result.replace(/[\D\t]/g, '');
+
     if (scanningFor === "initial") {
-      setInitialCode(result);
+      setInitialCode(sanitizedResult);
       // Reset final code if initial is re-scanned
       setFinalCode(null);
     } else if (scanningFor === "final") {
-      setFinalCode(result);
+      setFinalCode(sanitizedResult);
     }
     setScanningFor(null);
   };
@@ -51,8 +52,8 @@ export default function Home() {
     if (initialCode && finalCode) {
       // Try to convert to BigInt, but handle non-numeric values gracefully
       try {
-        const initialNum = BigInt(initialCode.replace(/\D/g, ''));
-        const finalNum = BigInt(finalCode.replace(/\D/g, ''));
+        const initialNum = BigInt(initialCode);
+        const finalNum = BigInt(finalCode);
 
         if (finalNum <= initialNum) {
           setError("Final sequence must be greater than the initial sequence.");
