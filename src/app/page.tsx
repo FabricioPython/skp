@@ -30,13 +30,7 @@ export default function Home() {
 
   const handleScan = (result: string) => {
     setError(null);
-    const codeRegex = /^\d{10}$/;
-    if (!codeRegex.test(result)) {
-      setError("Invalid barcode format. Expected a 10-digit number.");
-      setScanningFor(null);
-      return;
-    }
-
+    
     if (scanningFor === "initial") {
       setInitialCode(result);
       // Reset final code if initial is re-scanned
@@ -55,16 +49,22 @@ export default function Home() {
   
   const count = useMemo(() => {
     if (initialCode && finalCode) {
-      const initialNum = BigInt(initialCode);
-      const finalNum = BigInt(finalCode);
+      // Try to convert to BigInt, but handle non-numeric values gracefully
+      try {
+        const initialNum = BigInt(initialCode.replace(/\D/g, ''));
+        const finalNum = BigInt(finalCode.replace(/\D/g, ''));
 
-      if (finalNum <= initialNum) {
-        setError("Final sequence must be greater than the initial sequence.");
+        if (finalNum <= initialNum) {
+          setError("Final sequence must be greater than the initial sequence.");
+          return null;
+        }
+        
+        setError(null);
+        return finalNum - initialNum + 1n;
+      } catch (e) {
+        setError("Barcodes must contain numbers to calculate the count.");
         return null;
       }
-      
-      setError(null);
-      return finalNum - initialNum + 1n;
     }
     return null;
   }, [initialCode, finalCode]);
@@ -89,8 +89,8 @@ export default function Home() {
               <CardDescription>Scan the first item's barcode.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-center h-20 bg-muted rounded-md">
-                <p className="text-2xl font-mono tracking-widest text-foreground">
+              <div className="flex items-center justify-center h-20 bg-muted rounded-md px-2">
+                <p className="text-xl font-mono tracking-wide text-foreground break-all text-center">
                   {initialCode || "----------"}
                 </p>
               </div>
@@ -108,8 +108,8 @@ export default function Home() {
               <CardDescription>Scan the last item's barcode.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-center h-20 bg-muted rounded-md">
-                <p className="text-2xl font-mono tracking-widest text-foreground">
+              <div className="flex items-center justify-center h-20 bg-muted rounded-md px-2">
+                <p className="text-xl font-mono tracking-wide text-foreground break-all text-center">
                   {finalCode || "----------"}
                 </p>
               </div>
