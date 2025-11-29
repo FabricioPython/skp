@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { Camera, RefreshCcw } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Camera, RefreshCcw, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +27,7 @@ export default function Home() {
   const [finalCode, setFinalCode] = useState<string | null>(null);
   const [scanningFor, setScanningFor] = useState<ScanTarget | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [count, setCount] = useState<bigint | null>(null);
 
   const handleScan = (result: string) => {
     setError(null);
@@ -34,42 +35,43 @@ export default function Home() {
 
     if (scanningFor === "initial") {
       setInitialCode(sanitizedResult);
-      // Reset final code if initial is re-scanned
+      // Reset final code and count if initial is re-scanned
       setFinalCode(null);
+      setCount(null);
     } else if (scanningFor === "final") {
       setFinalCode(sanitizedResult);
+      setCount(null);
     }
     setScanningFor(null);
   };
-
-  const resetAll = useCallback(() => {
-    setInitialCode(null);
-    setFinalCode(null);
-    setError(null);
-  }, []);
   
-  const count = useMemo(() => {
+  const handleCount = () => {
     if (initialCode && finalCode) {
-      // Try to convert to BigInt, but handle non-numeric values gracefully
       try {
         const initialNum = BigInt(initialCode);
         const finalNum = BigInt(finalCode);
 
         if (finalNum <= initialNum) {
           setError("Final sequence must be greater than the initial sequence.");
-          return null;
+          setCount(null);
+          return;
         }
         
         setError(null);
-        return finalNum - initialNum + 1n;
+        setCount(finalNum - initialNum + 1n);
       } catch (e) {
         setError("Barcodes must contain numbers to calculate the count.");
-        return null;
+        setCount(null);
       }
     }
-    return null;
-  }, [initialCode, finalCode]);
+  };
 
+  const resetAll = useCallback(() => {
+    setInitialCode(null);
+    setFinalCode(null);
+    setError(null);
+    setCount(null);
+  }, []);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-8">
@@ -126,32 +128,42 @@ export default function Home() {
             </CardFooter>
           </Card>
         </div>
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {count !== null && count > 0 && (
-          <Card className="bg-accent text-accent-foreground shadow-xl transition-all duration-300">
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-xl">Total Items</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-7xl font-bold">{count.toString()}</p>
-            </CardContent>
-          </Card>
-        )}
         
-        {(initialCode || finalCode) && (
-          <div className="text-center">
-             <Button variant="outline" onClick={resetAll}>
-              <RefreshCcw className="mr-2 h-4 w-4" /> Reset
+        <div className="flex flex-col gap-4">
+            <Button
+              size="lg"
+              onClick={handleCount}
+              disabled={!initialCode || !finalCode}
+            >
+              <Calculator className="mr-2 h-4 w-4" /> Contar
             </Button>
-          </div>
-        )}
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {count !== null && count > 0 && (
+              <Card className="bg-accent text-accent-foreground shadow-xl transition-all duration-300">
+                <CardHeader className="text-center pb-2">
+                  <CardTitle className="text-xl">Total Items</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-7xl font-bold">{count.toString()}</p>
+                </CardContent>
+              </Card>
+            )}
+            
+            {(initialCode || finalCode) && (
+              <div className="text-center">
+                <Button variant="outline" onClick={resetAll}>
+                  <RefreshCcw className="mr-2 h-4 w-4" /> Reset
+                </Button>
+              </div>
+            )}
+        </div>
       </div>
 
       <Dialog open={!!scanningFor} onOpenChange={(open) => !open && setScanningFor(null)}>
