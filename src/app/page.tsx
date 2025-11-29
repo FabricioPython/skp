@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import BarcodeScanner from "@/components/barcode-scanner";
+import { Separator } from "@/components/ui/separator";
 
 type ScanTarget = "initial" | "final";
 
@@ -85,49 +86,48 @@ export default function Home() {
           </p>
         </header>
 
-        <div className="space-y-4">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle>Initial Barcode</CardTitle>
-              <CardDescription>Scan the first item's barcode.</CardDescription>
-            </CardHeader>
-            <CardContent>
+        <Card className="shadow-md bg-white">
+          <CardHeader>
+            <CardTitle>Barcode Scanning</CardTitle>
+            <CardDescription>
+              Scan the first and last item's barcode to calculate the total.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                Initial Barcode
+              </h3>
               <div className="flex items-center justify-center h-20 bg-muted rounded-md px-2">
                 <p className="text-xl font-mono tracking-wide text-foreground break-all text-center">
                   {initialCode || "----------"}
                 </p>
               </div>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full" onClick={() => setScanningFor("initial")}>
-                <Camera className="mr-2 h-4 w-4" /> Scan Initial
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle>Final Barcode</CardTitle>
-              <CardDescription>Scan the last item's barcode.</CardDescription>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                Final Barcode
+              </h3>
               <div className="flex items-center justify-center h-20 bg-muted rounded-md px-2">
                 <p className="text-xl font-mono tracking-wide text-foreground break-all text-center">
                   {finalCode || "----------"}
                 </p>
               </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full"
-                onClick={() => setScanningFor("final")}
-                disabled={!initialCode}
-              >
-                <Camera className="mr-2 h-4 w-4" /> Scan Final
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+            <Button className="w-full" onClick={() => setScanningFor("initial")}>
+              <Camera className="mr-2 h-4 w-4" /> Scan Initial
+            </Button>
+            <Button
+              className="w-full"
+              onClick={() => setScanningFor("final")}
+              disabled={!initialCode}
+            >
+              <Camera className="mr-2 h-4 w-4" /> Scan Final
+            </Button>
+          </CardFooter>
+        </Card>
         
         <div className="flex flex-col gap-4">
             <Button
