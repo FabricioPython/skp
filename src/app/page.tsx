@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +41,12 @@ export default function Home() {
   const [agencyError, setAgencyError] = useState<string | null>(null);
   const [isFetchingAgency, setIsFetchingAgency] = useState(false);
   const [reportDate, setReportDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (agencyName) {
+      setReportDate(new Date().toLocaleDateString());
+    }
+  }, [agencyName]);
 
 
   const handleScan = (result: string) => {
@@ -113,12 +119,11 @@ export default function Home() {
       const data = response.data;
       if (data && data.length > 0 && data[0].Nome) {
         setAgencyName(data[0].Nome);
-        setReportDate(new Date().toLocaleDateString());
       } else {
         throw new Error("Agency not found or response is not in the expected format.");
       }
     } catch (e) {
-      setAgencyError((e as Error).message || "Failed to fetch agency name. Check your connection or the API endpoint.");
+      setAgencyError("Failed to fetch agency name. Check the agency number or your network connection.");
     } finally {
       setIsFetchingAgency(false);
     }
@@ -345,5 +350,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
