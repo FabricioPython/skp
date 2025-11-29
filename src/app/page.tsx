@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Camera, RefreshCcw, Calculator, Save, Archive, Search } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,6 +39,7 @@ export default function Home() {
   const [agencyName, setAgencyName] = useState<string | null>(null);
   const [agencyError, setAgencyError] = useState<string | null>(null);
   const [isFetchingAgency, setIsFetchingAgency] = useState(false);
+  const [reportDate, setReportDate] = useState<string | null>(null);
 
 
   const handleScan = (result: string) => {
@@ -105,6 +106,7 @@ export default function Home() {
     setIsFetchingAgency(true);
     setAgencyError(null);
     setAgencyName(null);
+    setReportDate(null);
     try {
       const response = await fetch(`https://gxtlxh2du6.execute-api.us-east-1.amazonaws.com/agencia/${agencyNumber}`);
       if (!response.ok) {
@@ -112,6 +114,7 @@ export default function Home() {
       }
       const data = await response.json();
       setAgencyName(data.nome_agencia || "Name not found");
+      setReportDate(new Date().toLocaleDateString());
     } catch (e) {
       setAgencyError((e as Error).message || "Failed to fetch agency name.");
     } finally {
@@ -273,12 +276,43 @@ export default function Home() {
                       <AlertDescription>{agencyError}</AlertDescription>
                     </Alert>
                   )}
-                  {agencyName && (
-                    <Alert>
-                      <AlertTitle>Agency Name</AlertTitle>
-                      <AlertDescription>{agencyName}</AlertDescription>
-                    </Alert>
-                  )}
+                </CardContent>
+              </Card>
+            )}
+            
+            {agencyName && reportDate && (
+              <Card className="bg-white shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <FileText className="h-6 w-6 text-primary" />
+                    Relatório de Contagem
+                  </CardTitle>
+                  <CardDescription>
+                    Resumo da contagem de estoque para a agência.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1">
+                    <p><span className="font-semibold">Agência:</span> {agencyName}</p>
+                    <p><span className="font-semibold">Data:</span> {reportDate}</p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="font-semibold mb-2">Totais por Categoria:</h4>
+                    <div className="space-y-2">
+                      {Object.entries(savedCounts).map(([cat, total]) => (
+                        <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
+                          <span className="font-medium">Tipo {cat.toUpperCase()}</span>
+                          <span className="font-bold text-lg">{total.toString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-center p-2 rounded-md bg-primary text-primary-foreground">
+                    <span className="font-bold text-lg">Total Geral</span>
+                    <span className="font-extrabold text-2xl">{grandTotal.toString()}</span>
+                  </div>
                 </CardContent>
               </Card>
             )}
