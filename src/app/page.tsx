@@ -22,6 +22,7 @@ import BarcodeScanner from "@/components/barcode-scanner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 
 type ScanTarget = "initial" | "final";
 
@@ -219,6 +220,8 @@ export default function Home() {
               </Card>
             )}
             
+            <Input type="number" placeholder="Enter a number" className="mt-4" />
+
             {(initialCode || finalCode) && (
               <div className="text-center">
                 <Button variant="outline" onClick={resetAll}>
