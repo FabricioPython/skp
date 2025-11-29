@@ -113,8 +113,12 @@ export default function Home() {
         throw new Error(`Agency not found or API error. Status: ${response.status}`);
       }
       const data = await response.json();
-      setAgencyName(data.nome_agencia || "Name not found");
-      setReportDate(new Date().toLocaleDateString());
+      if (data && data.length > 0 && data[0].Nome) {
+        setAgencyName(data[0].Nome);
+        setReportDate(new Date().toLocaleDateString());
+      } else {
+        throw new Error("Agency not found or response is not in the expected format.");
+      }
     } catch (e) {
       setAgencyError((e as Error).message || "Failed to fetch agency name. Check your connection or the API endpoint.");
     } finally {
@@ -343,5 +347,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
