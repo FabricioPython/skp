@@ -53,7 +53,9 @@ type SavedReport = {
   savedCounts: Record<string, string>;
   sequencePairs: Record<string, SequencePair[]>;
   grandTotal: string;
-  createdAt: any;
+  createdAt: {
+    toDate: () => Date;
+  } | null;
 };
 
 
@@ -329,7 +331,11 @@ export default function Home() {
 
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
-  const sortedReports = savedReports?.sort((a, b) => b.createdAt?.toDate() - a.createdAt?.toDate());
+  const sortedReports = savedReports?.sort((a, b) => {
+    const dateA = a.createdAt?.toDate()?.getTime() || 0;
+    const dateB = b.createdAt?.toDate()?.getTime() || 0;
+    return dateB - dateA;
+  });
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-gray-50">
@@ -567,7 +573,7 @@ export default function Home() {
                         </Button>
                       </CardTitle>
                       <CardDescription>
-                        {report.agencyNumber} - {new Date(report.createdAt?.toDate()).toLocaleDateString('pt-BR')}
+                        {report.agencyNumber} - {report.createdAt ? new Date(report.createdAt.toDate()).toLocaleDateString('pt-BR') : 'Data inválida'}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
