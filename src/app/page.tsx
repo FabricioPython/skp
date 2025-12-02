@@ -366,7 +366,7 @@ export default function Home() {
                 Relatório de Contagem
               </CardTitle>
               <CardDescription>
-                Resumo da contagem de estoque para a agência.
+                Resumo de contagem de caixas.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
