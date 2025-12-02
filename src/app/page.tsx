@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText, Share2 } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText, Share2, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +17,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import BarcodeScanner from "@/components/barcode-scanner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -44,6 +54,9 @@ export default function Home() {
   const [agencyError, setAgencyError] = useState<string | null>(null);
   const [isFetchingAgency, setIsFetchingAgency] = useState(false);
   const [reportDate, setReportDate] = useState<string | null>(null);
+  
+  const [isIncrementAlertOpen, setIsIncrementAlertOpen] = useState(false);
+  const [categoryToIncrement, setCategoryToIncrement] = useState<string | null>(null);
 
   const reportRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -191,6 +204,22 @@ export default function Home() {
       });
     }
   };
+  
+  const handleIncrementClick = (cat: string) => {
+    setCategoryToIncrement(cat);
+    setIsIncrementAlertOpen(true);
+  };
+  
+  const confirmIncrement = () => {
+    if (categoryToIncrement) {
+      setSavedCounts(prevCounts => ({
+        ...prevCounts,
+        [categoryToIncrement]: (prevCounts[categoryToIncrement] || 0n) + 1n,
+      }));
+    }
+    setCategoryToIncrement(null);
+    setIsIncrementAlertOpen(false);
+  };
 
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
@@ -317,7 +346,12 @@ export default function Home() {
                {ALL_CATEGORIES.map((cat) => (
                 <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
                   <span className="font-medium">Tipo {cat.toUpperCase()}</span>
-                  <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleIncrementClick(cat)}>
+                      <PlusCircle className="h-5 w-5 text-green-500" />
+                    </Button>
+                  </div>
                 </div>
               ))}
               <Separator className="my-4 bg-border" />
@@ -419,6 +453,21 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
+      
+      <AlertDialog open={isIncrementAlertOpen} onOpenChange={setIsIncrementAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Incremento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem certeza que deseja adicionar 1 à contagem de <strong>Tipo {categoryToIncrement?.toUpperCase()}</strong>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmIncrement}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
