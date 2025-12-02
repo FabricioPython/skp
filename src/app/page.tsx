@@ -34,7 +34,7 @@ export default function Home() {
   const [finalCode, setFinalCode] = useState<string | null>(null);
   const [scanningFor, setScanningFor] = useState<ScanTarget | null>(null);
   const [error, setError] = useState<string | null>(null);
-_  const [count, setCount] = useState<bigint | null>(null);
+  const [count, setCount] = useState<bigint | null>(null);
   const [category, setCategory] = useState<string | null>(null);
   const [savedCounts, setSavedCounts] = useState<Record<string, bigint>>({});
   
