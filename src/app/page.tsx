@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText } from "lucide-react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,6 +24,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { agencies } from "@/lib/agencies";
+import { useToast } from "@/hooks/use-toast";
+import html2canvas from "html2canvas";
 
 type ScanTarget = "initial" | "final";
 
@@ -32,7 +34,7 @@ export default function Home() {
   const [finalCode, setFinalCode] = useState<string | null>(null);
   const [scanningFor, setScanningFor] = useState<ScanTarget | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [count, setCount] = useState<bigint | null>(null);
+_  const [count, setCount] = useState<bigint | null>(null);
   const [category, setCategory] = useState<string | null>(null);
   const [savedCounts, setSavedCounts] = useState<Record<string, bigint>>({});
   
@@ -41,6 +43,9 @@ export default function Home() {
   const [agencyError, setAgencyError] = useState<string | null>(null);
   const [isFetchingAgency, setIsFetchingAgency] = useState(false);
   const [reportDate, setReportDate] = useState<string | null>(null);
+
+  const reportRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (agencyName) {
@@ -129,10 +134,67 @@ export default function Home() {
     setIsFetchingAgency(false);
   };
 
+  const handleShare = async () => {
+    if (!reportRef.current) {
+      toast({
+        title: "Error",
+        description: "Could not capture report.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        useCORS: true,
+        backgroundColor: null,
+      });
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          toast({
+            title: "Error",
+            description: "Failed to create image from report.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const file = new File([blob], "stock-report.png", { type: "image/png" });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'Stock Count Report',
+            text: `Here is the stock count report for ${agencyName} on ${reportDate}.`,
+          });
+        } else {
+          // Fallback for desktop or browsers that don't support sharing files
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(file);
+          link.download = 'stock-report.png';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          toast({
+            title: "Image Saved",
+            description: "Report image downloaded. You can now share it manually.",
+          });
+        }
+      }, 'image/png');
+    } catch (error) {
+      console.error("Sharing failed:", error);
+      toast({
+        title: "Sharing Failed",
+        description: "Could not share the report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-8 bg-gray-50">
       <div className="w-full max-w-md space-y-6">
         <header className="text-center">
           <h1 className="text-4xl font-bold font-headline text-primary">
@@ -143,7 +205,7 @@ export default function Home() {
           </p>
         </header>
 
-        <Card className="shadow-md bg-white">
+        <Card className="shadow-lg bg-white rounded-xl">
           <CardHeader>
             <CardTitle>Barcode Scanning</CardTitle>
             <CardDescription>
@@ -156,7 +218,7 @@ export default function Home() {
                 Initial Barcode
               </h3>
               <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-md px-2">
+                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-md px-2 border">
                   <p className="text-lg font-mono tracking-wide text-foreground break-all text-center">
                     {initialCode || "----------"}
                   </p>
@@ -171,7 +233,7 @@ export default function Home() {
                 Final Barcode
               </h3>
               <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-md px-2">
+                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-md px-2 border">
                   <p className="text-lg font-mono tracking-wide text-foreground break-all text-center">
                     {finalCode || "----------"}
                   </p>
@@ -189,29 +251,32 @@ export default function Home() {
               size="lg"
               onClick={handleCount}
               disabled={!initialCode || !finalCode}
+              className="rounded-full"
             >
               <Calculator className="mr-2 h-4 w-4" /> Contar
             </Button>
             
             {count !== null && (
-              <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="a" id="r1" />
-                  <Label htmlFor="r1">Tipo A</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="b" id="r2" />
-                  <Label htmlFor="r2">Tipo B</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="c" id="r3" />
-                  <Label htmlFor="r3">Tipo C</Label>
-                </div>
-              </RadioGroup>
+              <Card className="p-4">
+                <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="a" id="r1" />
+                    <Label htmlFor="r1">Tipo A</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="b" id="r2" />
+                    <Label htmlFor="r2">Tipo B</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="c" id="r3" />
+                    <Label htmlFor="r3">Tipo C</Label>
+                  </div>
+                </RadioGroup>
+              </Card>
             )}
 
             {category && count !== null && (
-              <Button size="lg" onClick={handleSave}>
+              <Button size="lg" onClick={handleSave} className="rounded-full">
                 <Save className="mr-2 h-4 w-4" /> Salvar
               </Button>
             )}
@@ -224,7 +289,7 @@ export default function Home() {
             )}
 
             {count !== null && count > 0 && (
-              <Card className="bg-accent text-accent-foreground shadow-xl transition-all duration-300">
+              <Card className="bg-accent text-accent-foreground shadow-xl transition-all duration-300 rounded-xl">
                 <CardHeader className="text-center pb-2">
                   <CardTitle className="text-xl">Total Items</CardTitle>
                 </CardHeader>
@@ -235,7 +300,7 @@ export default function Home() {
             )}
 
             {Object.keys(savedCounts).length > 0 && (
-              <Card className="bg-secondary">
+              <Card className="bg-secondary rounded-xl">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Archive className="h-5 w-5" />
@@ -259,7 +324,7 @@ export default function Home() {
             )}
             
             {Object.keys(savedCounts).length > 0 && (
-              <Card>
+              <Card className="rounded-xl">
                 <CardHeader>
                   <CardTitle>Find Agency</CardTitle>
                 </CardHeader>
@@ -276,7 +341,7 @@ export default function Home() {
                       <Search className="h-4 w-4" />
                     </Button>
                   </div>
-                  {isFetchingAgency && <p>Loading...</p>}
+                  {isFetchingAgency && <p className="text-center text-sm text-muted-foreground">Loading...</p>}
                   {agencyError && (
                     <Alert variant="destructive">
                       <AlertTitle>Error</AlertTitle>
@@ -288,7 +353,7 @@ export default function Home() {
             )}
             
             {agencyName && reportDate && (
-              <Card className="bg-white shadow-lg">
+              <Card ref={reportRef} className="bg-white shadow-lg rounded-xl">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <FileText className="h-6 w-6 text-primary" />
@@ -327,12 +392,17 @@ export default function Home() {
                     <span className="font-extrabold text-2xl">{grandTotal.toString()}</span>
                   </div>
                 </CardContent>
+                <CardFooter>
+                  <Button onClick={handleShare} className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full">
+                    <Share2 className="mr-2 h-4 w-4" /> Share on WhatsApp
+                  </Button>
+                </CardFooter>
               </Card>
             )}
 
             {(initialCode || finalCode) && (
               <div className="text-center">
-                <Button variant="outline" onClick={resetAll}>
+                <Button variant="outline" onClick={resetAll} className="rounded-full">
                   <RefreshCcw className="mr-2 h-4 w-4" /> Reset
                 </Button>
               </div>
