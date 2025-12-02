@@ -165,7 +165,7 @@ export default function Home() {
           await navigator.share({
             files: [file],
             title: 'Relatório de Contagem de Estoque',
-            text: `Aqui está o relatório de contagem de estoque para ${agencyName} em ${reportDate}.`,
+            text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${reportDate}.`,
           });
         } else {
           // Fallback for desktop or browsers that don't support sharing files
@@ -386,7 +386,7 @@ export default function Home() {
                   ))}
                   {(savedCounts.a || savedCounts.b) && (
                     <div className="flex justify-between items-center bg-muted p-2 rounded-md">
-                      <span className="font-medium">A+B</span>
+                      <span className="font-medium">Tipo AB</span>
                       <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
                     </div>
                   )}
