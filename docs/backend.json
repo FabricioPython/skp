@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "report": {
+      "title": "Report",
+      "description": "A saved stock count report.",
+      "type": "object",
+      "properties": {
+        "agencyNumber": {
+          "type": "string",
+          "description": "The number of the agency."
+        },
+        "agencyName": {
+          "type": "string",
+          "description": "The name of the agency."
+        },
+        "reportDate": {
+          "type": "string",
+          "description": "The date the report was generated."
+        },
+        "savedCounts": {
+          "type": "object",
+          "description": "An object with category counts.",
+          "properties": {}
+        },
+        "grandTotal": {
+          "type": "string",
+          "description": "The total count of all items."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of when the report was created."
+        }
+      },
+      "required": [
+        "agencyNumber",
+        "agencyName",
+        "reportDate",
+        "savedCounts",
+        "grandTotal",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": []
+  },
+  "firestore": {
+    "/reports/{reportId}": {
+      "schema": {
+        "$ref": "#/backend/entities/report"
+      },
+      "description": "Collection of saved reports."
+    }
+  }
+}
+
+    

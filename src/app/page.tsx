@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText, Share2, PlusCircle } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText, Share2, PlusCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -36,9 +36,23 @@ import { Input } from "@/components/ui/input";
 import { agencies } from "@/lib/agencies";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
+import { useFirebase } from "@/firebase";
+import { addDoc, collection, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { useCollection } from "@/firebase";
 
 type ScanTarget = "initial" | "final";
 const ALL_CATEGORIES = ['a', 'b', 'c'];
+
+type SavedReport = {
+  id: string;
+  agencyNumber: string;
+  agencyName: string;
+  reportDate: string;
+  savedCounts: Record<string, string>;
+  grandTotal: string;
+  createdAt: any;
+};
+
 
 export default function Home() {
   const [initialCode, setInitialCode] = useState<string | null>(null);
@@ -60,6 +74,14 @@ export default function Home() {
 
   const reportRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { firestore } = useFirebase();
+
+  const reportsCollection = firestore ? collection(firestore, 'reports') : null;
+  const { data: savedReports, loading: reportsLoading } = useCollection<SavedReport>(reportsCollection);
+
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (agencyName) {
@@ -148,6 +170,72 @@ export default function Home() {
     setIsFetchingAgency(false);
   };
 
+  const handleGenerateAndSaveReport = async () => {
+    if (!firestore || !agencyName || !reportDate || !grandTotal) return;
+
+    const reportData = {
+      agencyNumber,
+      agencyName,
+      reportDate,
+      savedCounts: Object.fromEntries(
+        Object.entries(savedCounts).map(([key, value]) => [key, value.toString()])
+      ),
+      grandTotal: grandTotal.toString(),
+      createdAt: serverTimestamp(),
+    };
+
+    try {
+      if (reportsCollection) {
+        await addDoc(reportsCollection, reportData);
+        toast({
+          title: "Relatório Salvo!",
+          description: "Seu relatório de contagem foi salvo com sucesso.",
+        });
+        // Clear current report data after saving
+        setSavedCounts({});
+        setAgencyNumber("");
+        setAgencyName(null);
+        setReportDate(null);
+      }
+    } catch (e) {
+      console.error("Erro ao salvar relatório: ", e);
+      toast({
+        title: "Erro ao Salvar",
+        description: "Não foi possível salvar o relatório. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleDeleteReport = async () => {
+    if (!firestore || !reportToDelete) return;
+    try {
+      if (reportsCollection) {
+        await deleteDoc(doc(firestore, "reports", reportToDelete));
+        toast({
+          title: "Relatório Excluído",
+          description: "O relatório foi excluído com sucesso.",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao excluir relatório: ", error);
+      toast({
+        title: "Erro ao Excluir",
+        description: "Não foi possível excluir o relatório.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleteAlertOpen(false);
+      setReportToDelete(null);
+    }
+  };
+
+  const openDeleteConfirmation = (reportId: string) => {
+    setReportToDelete(reportId);
+    setIsDeleteAlertOpen(true);
+  };
+
+
   const handleShare = async () => {
     if (!reportRef.current) {
       toast({
@@ -176,11 +264,18 @@ export default function Home() {
         const file = new File([blob], "relatorio-estoque.png", { type: "image/png" });
         
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: 'Relatório de Contagem de Estoque',
-            text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${reportDate}.`,
-          });
+          try {
+             await navigator.share({
+              files: [file],
+              title: 'Relatório de Contagem de Estoque',
+              text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${reportDate}.`,
+            });
+            await handleGenerateAndSaveReport();
+          } catch (shareError) {
+             console.log("Compartilhamento cancelado ou falhou", shareError)
+             // Even if sharing fails, we save the report
+             await handleGenerateAndSaveReport();
+          }
         } else {
           // Fallback for desktop or browsers that don't support sharing files
           const link = document.createElement('a');
@@ -193,6 +288,7 @@ export default function Home() {
             title: "Imagem Salva",
             description: "Imagem do relatório baixada. Você pode compartilhá-la manualmente.",
           });
+          await handleGenerateAndSaveReport();
         }
       }, 'image/png');
     } catch (error) {
@@ -223,8 +319,10 @@ export default function Home() {
 
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
+  const sortedReports = savedReports?.sort((a, b) => b.createdAt?.toDate() - a.createdAt?.toDate());
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-8 bg-gray-50">
+    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-gray-50">
       <div className="w-full max-w-md space-y-6">
         <header className="text-center">
           <h1 className="text-4xl font-bold font-headline text-primary">
@@ -433,9 +531,58 @@ export default function Home() {
             </CardContent>
             <CardFooter>
               <Button onClick={handleShare} className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full">
-                <Share2 className="mr-2 h-4 w-4" /> Compartilhar no WhatsApp
+                <Share2 className="mr-2 h-4 w-4" /> Compartilhar e Salvar
               </Button>
             </CardFooter>
+          </Card>
+        )}
+
+        {sortedReports && sortedReports.length > 0 && (
+          <Card className="rounded-xl">
+            <CardHeader>
+              <CardTitle>Relatórios Salvos</CardTitle>
+              <CardDescription>Veja os relatórios de contagem anteriores.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {reportsLoading ? (
+                <p>Carregando relatórios...</p>
+              ) : (
+                sortedReports.map((report) => (
+                  <Card key={report.id} className="bg-white shadow-md">
+                    <CardHeader>
+                      <CardTitle className="flex justify-between items-center text-lg">
+                        <span>{report.agencyName}</span>
+                        <Button variant="ghost" size="icon" onClick={() => openDeleteConfirmation(report.id)}>
+                          <Trash2 className="h-5 w-5 text-destructive" />
+                        </Button>
+                      </CardTitle>
+                      <CardDescription>
+                        {report.agencyNumber} - {new Date(report.createdAt?.seconds * 1000).toLocaleDateString('pt-BR')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {ALL_CATEGORIES.map(cat => (
+                        <div key={cat} className="flex justify-between items-center text-sm">
+                          <span>Tipo {cat.toUpperCase()}:</span>
+                          <span className="font-medium">{(report.savedCounts[cat] || '0')}</span>
+                        </div>
+                      ))}
+                       <div className="flex justify-between items-center text-sm">
+                          <span>Tipo AB:</span>
+                          <span className="font-medium">
+                            {(BigInt(report.savedCounts.a || '0') + BigInt(report.savedCounts.b || '0')).toString()}
+                          </span>
+                        </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between items-center font-bold">
+                          <span>Total Geral:</span>
+                          <span>{report.grandTotal}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </CardContent>
           </Card>
         )}
       </div>
@@ -468,6 +615,23 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem certeza que deseja excluir este relatório? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteReport} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
+
+    
