@@ -557,7 +557,7 @@ export default function Home() {
                         </Button>
                       </CardTitle>
                       <CardDescription>
-                        {report.agencyNumber} - {new Date(report.createdAt?.seconds * 1000).toLocaleDateString('pt-BR')}
+                        {report.agencyNumber} - {report.reportDate}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -633,5 +633,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
