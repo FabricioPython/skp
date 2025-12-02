@@ -23,7 +23,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import axios from "axios";
+import { agencies } from "@/lib/agencies";
 
 type ScanTarget = "initial" | "final";
 
@@ -114,19 +114,19 @@ export default function Home() {
     setAgencyError(null);
     setAgencyName(null);
     setReportDate(null);
-    try {
-      const response = await axios.get(`https://gxtlxh2du6.execute-api.us-east-1.amazonaws.com/agencia/${agencyNumber}`);
-      const data = response.data;
-      if (data && data.length > 0 && data[0].Nome) {
-        setAgencyName(data[0].Nome);
-      } else {
-        throw new Error("Agency not found or response is not in the expected format.");
-      }
-    } catch (e) {
-      setAgencyError("Failed to fetch agency name. Check the agency number or your network connection.");
-    } finally {
-      setIsFetchingAgency(false);
+    
+    // Simulate a short delay for user experience
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    const agency = agencies.find(a => a.id === parseInt(agencyNumber, 10));
+
+    if (agency) {
+      setAgencyName(agency.name);
+    } else {
+      setAgencyError("Agency not found. Please check the number.");
     }
+    
+    setIsFetchingAgency(false);
   };
 
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
@@ -300,7 +300,7 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-1">
-                    <p><span className="font-semibold">Agência:</span> {agencyName}</p>
+                    <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
                     <p><span className="font-semibold">Data:</span> {reportDate}</p>
                   </div>
                   <Separator />
