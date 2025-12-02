@@ -198,7 +198,7 @@ export default function Home() {
       <div className="w-full max-w-md space-y-6">
         <header className="text-center">
           <h1 className="text-4xl font-bold font-headline text-primary">
-            Stock Counter
+            counterSKP
           </h1>
           <p className="text-muted-foreground mt-2">
             Scan barcodes to count stock items quickly.
