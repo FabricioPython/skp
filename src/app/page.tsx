@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 
 type ScanTarget = "initial" | "final";
+const ALL_CATEGORIES = ['a', 'b', 'c'];
 
 export default function Home() {
   const [initialCode, setInitialCode] = useState<string | null>(null);
@@ -313,10 +314,10 @@ export default function Home() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {Object.entries(savedCounts).map(([cat, total]) => (
+               {ALL_CATEGORIES.map((cat) => (
                 <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
                   <span className="font-medium">Tipo {cat.toUpperCase()}</span>
-                  <span className="font-bold text-lg">{total.toString()}</span>
+                  <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
                 </div>
               ))}
               <Separator className="my-4 bg-border" />
@@ -378,18 +379,16 @@ export default function Home() {
               <div>
                 <h4 className="font-semibold mb-2">Totais por Categoria:</h4>
                 <div className="space-y-2">
-                  {Object.entries(savedCounts).map(([cat, total]) => (
+                  {ALL_CATEGORIES.map((cat) => (
                     <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
                       <span className="font-medium">Tipo {cat.toUpperCase()}</span>
-                      <span className="font-bold text-lg">{total.toString()}</span>
+                      <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
                     </div>
                   ))}
-                  {(savedCounts.a || savedCounts.b) && (
-                    <div className="flex justify-between items-center bg-muted p-2 rounded-md">
-                      <span className="font-medium">Tipo AB</span>
-                      <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center bg-muted p-2 rounded-md">
+                    <span className="font-medium">Tipo AB</span>
+                    <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
+                  </div>
                 </div>
               </div>
               <Separator />
