@@ -201,7 +201,7 @@ export default function Home() {
             counterSKP
           </h1>
           <p className="text-muted-foreground mt-2">
-            Digitalize códigos de barras para contar itens de estoque rapidamente.
+            Digitalize códigos de barras para contar a quantidade de caixas.
           </p>
         </header>
 
