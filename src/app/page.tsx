@@ -244,21 +244,43 @@ export default function Home() {
               </div>
             </div>
           </CardContent>
-        </Card>
-        
-        <div className="flex flex-col gap-4">
+          <CardFooter className="flex-col gap-4">
             <Button
               size="lg"
               onClick={handleCount}
               disabled={!initialCode || !finalCode}
-              className="rounded-full"
+              className="w-full rounded-full"
             >
               <Calculator className="mr-2 h-4 w-4" /> Contar
             </Button>
-            
-            {count !== null && (
-              <Card className="p-4">
-                <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4">
+            {(initialCode || finalCode) && (
+              <Button variant="outline" onClick={resetAll} className="w-full rounded-full">
+                <RefreshCcw className="mr-2 h-4 w-4" /> Reset
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+        
+        {error && (
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {count !== null && (
+          <Card className="shadow-lg bg-white rounded-xl">
+            <CardHeader>
+              <CardTitle>Count Result</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-accent text-accent-foreground rounded-xl p-4">
+                <p className="text-center text-xl">Total Items</p>
+                <p className="text-center text-7xl font-bold">{count.toString()}</p>
+              </div>
+              <div>
+                <Label>Select Category to Save</Label>
+                <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4 pt-2">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="a" id="r1" />
                     <Label htmlFor="r1">Tipo A</Label>
@@ -272,142 +294,117 @@ export default function Home() {
                     <Label htmlFor="r3">Tipo C</Label>
                   </div>
                 </RadioGroup>
-              </Card>
-            )}
-
-            {category && count !== null && (
-              <Button size="lg" onClick={handleSave} className="rounded-full">
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button size="lg" onClick={handleSave} disabled={!category} className="w-full rounded-full">
                 <Save className="mr-2 h-4 w-4" /> Salvar
               </Button>
-            )}
+            </CardFooter>
+          </Card>
+        )}
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {count !== null && count > 0 && (
-              <Card className="bg-accent text-accent-foreground shadow-xl transition-all duration-300 rounded-xl">
-                <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-xl">Total Items</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <p className="text-7xl font-bold">{count.toString()}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {Object.keys(savedCounts).length > 0 && (
-              <Card className="bg-secondary rounded-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Archive className="h-5 w-5" />
-                    Category Totals
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
+        {Object.keys(savedCounts).length > 0 && (
+          <Card className="bg-secondary rounded-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Archive className="h-5 w-5" />
+                Category Totals
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {Object.entries(savedCounts).map(([cat, total]) => (
+                <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
+                  <span className="font-medium">Tipo {cat.toUpperCase()}</span>
+                  <span className="font-bold text-lg">{total.toString()}</span>
+                </div>
+              ))}
+              <Separator className="my-4 bg-border" />
+              <div className="flex justify-between items-center p-2">
+                <span className="font-bold text-lg">Total Geral</span>
+                <span className="font-extrabold text-xl">{grandTotal.toString()}</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {Object.keys(savedCounts).length > 0 && (
+          <Card className="rounded-xl">
+            <CardHeader>
+              <CardTitle>Generate Report</CardTitle>
+              <CardDescription>Find an agency to generate a final report.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  placeholder="Enter agency number"
+                  value={agencyNumber}
+                  onChange={(e) => setAgencyNumber(e.target.value)}
+                  disabled={isFetchingAgency}
+                />
+                <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber}>
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+              {isFetchingAgency && <p className="text-center text-sm text-muted-foreground">Loading...</p>}
+              {agencyError && (
+                <Alert variant="destructive">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{agencyError}</AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        
+        {agencyName && reportDate && (
+          <Card ref={reportRef} className="bg-white shadow-lg rounded-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <FileText className="h-6 w-6 text-primary" />
+                Relatório de Contagem
+              </CardTitle>
+              <CardDescription>
+                Resumo da contagem de estoque para a agência.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1">
+                <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
+                <p><span className="font-semibold">Data:</span> {reportDate}</p>
+              </div>
+              <Separator />
+              <div>
+                <h4 className="font-semibold mb-2">Totais por Categoria:</h4>
+                <div className="space-y-2">
                   {Object.entries(savedCounts).map(([cat, total]) => (
                     <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
                       <span className="font-medium">Tipo {cat.toUpperCase()}</span>
                       <span className="font-bold text-lg">{total.toString()}</span>
                     </div>
                   ))}
-                  <Separator className="my-4 bg-border" />
-                  <div className="flex justify-between items-center p-2">
-                    <span className="font-bold text-lg">Total Geral</span>
-                    <span className="font-extrabold text-xl">{grandTotal.toString()}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {Object.keys(savedCounts).length > 0 && (
-              <Card className="rounded-xl">
-                <CardHeader>
-                  <CardTitle>Find Agency</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Enter agency number"
-                      value={agencyNumber}
-                      onChange={(e) => setAgencyNumber(e.target.value)}
-                      disabled={isFetchingAgency}
-                    />
-                    <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber}>
-                      <Search className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {isFetchingAgency && <p className="text-center text-sm text-muted-foreground">Loading...</p>}
-                  {agencyError && (
-                    <Alert variant="destructive">
-                      <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>{agencyError}</AlertDescription>
-                    </Alert>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-            
-            {agencyName && reportDate && (
-              <Card ref={reportRef} className="bg-white shadow-lg rounded-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <FileText className="h-6 w-6 text-primary" />
-                    Relatório de Contagem
-                  </CardTitle>
-                  <CardDescription>
-                    Resumo da contagem de estoque para a agência.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-1">
-                    <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
-                    <p><span className="font-semibold">Data:</span> {reportDate}</p>
-                  </div>
-                  <Separator />
-                  <div>
-                    <h4 className="font-semibold mb-2">Totais por Categoria:</h4>
-                    <div className="space-y-2">
-                      {Object.entries(savedCounts).map(([cat, total]) => (
-                        <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
-                          <span className="font-medium">Tipo {cat.toUpperCase()}</span>
-                          <span className="font-bold text-lg">{total.toString()}</span>
-                        </div>
-                      ))}
-                      {(savedCounts.a || savedCounts.b) && (
-                        <div className="flex justify-between items-center bg-muted p-2 rounded-md">
-                          <span className="font-medium">A+B</span>
-                          <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
-                        </div>
-                      )}
+                  {(savedCounts.a || savedCounts.b) && (
+                    <div className="flex justify-between items-center bg-muted p-2 rounded-md">
+                      <span className="font-medium">A+B</span>
+                      <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
                     </div>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between items-center p-2 rounded-md bg-primary text-primary-foreground">
-                    <span className="font-bold text-lg">Total Geral</span>
-                    <span className="font-extrabold text-2xl">{grandTotal.toString()}</span>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button onClick={handleShare} className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full">
-                    <Share2 className="mr-2 h-4 w-4" /> Share on WhatsApp
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
-
-            {(initialCode || finalCode) && (
-              <div className="text-center">
-                <Button variant="outline" onClick={resetAll} className="rounded-full">
-                  <RefreshCcw className="mr-2 h-4 w-4" /> Reset
-                </Button>
+                  )}
+                </div>
               </div>
-            )}
-        </div>
+              <Separator />
+              <div className="flex justify-between items-center p-2 rounded-md bg-primary text-primary-foreground">
+                <span className="font-bold text-lg">Total Geral</span>
+                <span className="font-extrabold text-2xl">{grandTotal.toString()}</span>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleShare} className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full">
+                <Share2 className="mr-2 h-4 w-4" /> Share on WhatsApp
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
       </div>
 
       <Dialog open={!!scanningFor} onOpenChange={(open) => !open && setScanningFor(null)}>
