@@ -49,7 +49,7 @@ export default function Home() {
 
   useEffect(() => {
     if (agencyName) {
-      setReportDate(new Date().toLocaleDateString());
+      setReportDate(new Date().toLocaleDateString('pt-BR'));
     }
   }, [agencyName]);
 
@@ -77,7 +77,7 @@ export default function Home() {
         const finalNum = BigInt(finalCode);
 
         if (finalNum <= initialNum) {
-          setError("Final sequence must be greater than the initial sequence.");
+          setError("A sequência final deve ser maior que a sequência inicial.");
           setCount(null);
           return;
         }
@@ -85,7 +85,7 @@ export default function Home() {
         setError(null);
         setCount(finalNum - initialNum + 1n);
       } catch (e) {
-        setError("Barcodes must contain numbers to calculate the count.");
+        setError("Os códigos de barras devem conter números para calcular a contagem.");
         setCount(null);
       }
     }
@@ -112,7 +112,7 @@ export default function Home() {
   
   const handleFetchAgency = async () => {
     if (!agencyNumber) {
-      setAgencyError("Please enter an agency number.");
+      setAgencyError("Por favor, insira o número da agência.");
       return;
     }
     setIsFetchingAgency(true);
@@ -128,7 +128,7 @@ export default function Home() {
     if (agency) {
       setAgencyName(agency.name);
     } else {
-      setAgencyError("Agency not found. Please check the number.");
+      setAgencyError("Agência não encontrada. Por favor, verifique o número.");
     }
     
     setIsFetchingAgency(false);
@@ -137,8 +137,8 @@ export default function Home() {
   const handleShare = async () => {
     if (!reportRef.current) {
       toast({
-        title: "Error",
-        description: "Could not capture report.",
+        title: "Erro",
+        description: "Não foi possível capturar o relatório.",
         variant: "destructive",
       });
       return;
@@ -152,40 +152,40 @@ export default function Home() {
       canvas.toBlob(async (blob) => {
         if (!blob) {
           toast({
-            title: "Error",
-            description: "Failed to create image from report.",
+            title: "Erro",
+            description: "Falha ao criar imagem do relatório.",
             variant: "destructive",
           });
           return;
         }
 
-        const file = new File([blob], "stock-report.png", { type: "image/png" });
+        const file = new File([blob], "relatorio-estoque.png", { type: "image/png" });
         
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
-            title: 'Stock Count Report',
-            text: `Here is the stock count report for ${agencyName} on ${reportDate}.`,
+            title: 'Relatório de Contagem de Estoque',
+            text: `Aqui está o relatório de contagem de estoque para ${agencyName} em ${reportDate}.`,
           });
         } else {
           // Fallback for desktop or browsers that don't support sharing files
           const link = document.createElement('a');
           link.href = URL.createObjectURL(file);
-          link.download = 'stock-report.png';
+          link.download = 'relatorio-estoque.png';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           toast({
-            title: "Image Saved",
-            description: "Report image downloaded. You can now share it manually.",
+            title: "Imagem Salva",
+            description: "Imagem do relatório baixada. Você pode compartilhá-la manualmente.",
           });
         }
       }, 'image/png');
     } catch (error) {
-      console.error("Sharing failed:", error);
+      console.error("Falha no compartilhamento:", error);
       toast({
-        title: "Sharing Failed",
-        description: "Could not share the report. Please try again.",
+        title: "Falha no Compartilhamento",
+        description: "Não foi possível compartilhar o relatório. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
@@ -201,21 +201,21 @@ export default function Home() {
             counterSKP
           </h1>
           <p className="text-muted-foreground mt-2">
-            Scan barcodes to count stock items quickly.
+            Digitalize códigos de barras para contar itens de estoque rapidamente.
           </p>
         </header>
 
         <Card className="shadow-lg bg-white rounded-xl">
           <CardHeader>
-            <CardTitle>Barcode Scanning</CardTitle>
+            <CardTitle>Leitura de Código de Barras</CardTitle>
             <CardDescription>
-              Scan the first and last item's barcode to calculate the total.
+              Digitalize o código de barras do primeiro e do último item para calcular o total.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">
-                Initial Barcode
+                Código de Barras Inicial
               </h3>
               <div className="flex items-center gap-2">
                 <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-md px-2 border">
@@ -230,7 +230,7 @@ export default function Home() {
             </div>
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">
-                Final Barcode
+                Código de Barras Final
               </h3>
               <div className="flex items-center gap-2">
                 <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-md px-2 border">
@@ -255,7 +255,7 @@ export default function Home() {
             </Button>
             {(initialCode || finalCode) && (
               <Button variant="outline" onClick={resetAll} className="w-full rounded-full">
-                <RefreshCcw className="mr-2 h-4 w-4" /> Reset
+                <RefreshCcw className="mr-2 h-4 w-4" /> Reiniciar
               </Button>
             )}
           </CardFooter>
@@ -263,7 +263,7 @@ export default function Home() {
         
         {error && (
           <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>Erro</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -271,15 +271,15 @@ export default function Home() {
         {count !== null && (
           <Card className="shadow-lg bg-white rounded-xl">
             <CardHeader>
-              <CardTitle>Count Result</CardTitle>
+              <CardTitle>Resultado da Contagem</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-accent text-accent-foreground rounded-xl p-4">
-                <p className="text-center text-xl">Total Items</p>
+                <p className="text-center text-xl">Total de Itens</p>
                 <p className="text-center text-7xl font-bold">{count.toString()}</p>
               </div>
               <div>
-                <Label>Select Category to Save</Label>
+                <Label>Selecione a Categoria para Salvar</Label>
                 <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4 pt-2">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="a" id="r1" />
@@ -309,7 +309,7 @@ export default function Home() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Archive className="h-5 w-5" />
-                Category Totals
+                Totais por Categoria
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -331,14 +331,14 @@ export default function Home() {
         {Object.keys(savedCounts).length > 0 && (
           <Card className="rounded-xl">
             <CardHeader>
-              <CardTitle>Generate Report</CardTitle>
-              <CardDescription>Find an agency to generate a final report.</CardDescription>
+              <CardTitle>Gerar Relatório</CardTitle>
+              <CardDescription>Encontre uma agência para gerar um relatório final.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
-                  placeholder="Enter agency number"
+                  placeholder="Digite o número da agência"
                   value={agencyNumber}
                   onChange={(e) => setAgencyNumber(e.target.value)}
                   disabled={isFetchingAgency}
@@ -347,10 +347,10 @@ export default function Home() {
                   <Search className="h-4 w-4" />
                 </Button>
               </div>
-              {isFetchingAgency && <p className="text-center text-sm text-muted-foreground">Loading...</p>}
+              {isFetchingAgency && <p className="text-center text-sm text-muted-foreground">Carregando...</p>}
               {agencyError && (
                 <Alert variant="destructive">
-                  <AlertTitle>Error</AlertTitle>
+                  <AlertTitle>Erro</AlertTitle>
                   <AlertDescription>{agencyError}</AlertDescription>
                 </Alert>
               )}
@@ -400,7 +400,7 @@ export default function Home() {
             </CardContent>
             <CardFooter>
               <Button onClick={handleShare} className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full">
-                <Share2 className="mr-2 h-4 w-4" /> Share on WhatsApp
+                <Share2 className="mr-2 h-4 w-4" /> Compartilhar no WhatsApp
               </Button>
             </CardFooter>
           </Card>
@@ -410,7 +410,7 @@ export default function Home() {
       <Dialog open={!!scanningFor} onOpenChange={(open) => !open && setScanningFor(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Scan {scanningFor === 'initial' ? 'Initial' : 'Final'} Barcode</DialogTitle>
+            <DialogTitle>Digitalizar Código de Barras {scanningFor === 'initial' ? 'Inicial' : 'Final'}</DialogTitle>
           </DialogHeader>
           <div className="relative -mx-6 -mb-6 bg-black rounded-b-lg overflow-hidden">
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">

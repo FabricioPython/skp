@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import { Result } from "@zxing/library";
@@ -36,8 +36,8 @@ export default function BarcodeScanner({
         setHasCameraPermission(false);
       } else if (error.name === "NotFoundError") {
         toast({
-          title: "No Camera Found",
-          description: "Could not find a camera on this device.",
+          title: "Nenhuma Câmera Encontrada",
+          description: "Não foi possível encontrar uma câmera neste dispositivo.",
           variant: "destructive",
         });
         setHasCameraPermission(false);
@@ -53,7 +53,7 @@ export default function BarcodeScanner({
         // We don't need to manually set srcObject for useZxing's ref
         stream.getTracks().forEach(track => track.stop()); // Stop the stream as useZxing will manage it.
       } catch (error) {
-        console.error('Error accessing camera:', error);
+        console.error('Erro ao acessar a câmera:', error);
         setHasCameraPermission(false);
       }
     };
@@ -70,9 +70,9 @@ export default function BarcodeScanner({
         {hasCameraPermission === false && (
             <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/50">
                 <Alert variant="destructive">
-                    <AlertTitle>Camera Access Required</AlertTitle>
+                    <AlertTitle>Acesso à Câmera Necessário</AlertTitle>
                     <AlertDescription>
-                        Please allow camera access in your browser settings to scan barcodes. You may need to refresh the page.
+                        Por favor, permita o acesso à câmera nas configurações do seu navegador para digitalizar códigos de barras. Pode ser necessário atualizar a página.
                     </AlertDescription>
                 </Alert>
             </div>
