@@ -313,6 +313,12 @@ export default function Home() {
                           <span className="font-bold text-lg">{total.toString()}</span>
                         </div>
                       ))}
+                      {(savedCounts.a || savedCounts.b) && (
+                        <div className="flex justify-between items-center bg-muted p-2 rounded-md">
+                          <span className="font-medium">A+B</span>
+                          <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Separator />
