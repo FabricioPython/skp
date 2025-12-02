@@ -43,12 +43,15 @@ import { useCollection } from "@/firebase";
 type ScanTarget = "initial" | "final";
 const ALL_CATEGORIES = ['a', 'b', 'c'];
 
+type SequencePair = { initial: string; final: string };
+
 type SavedReport = {
   id: string;
   agencyNumber: string;
   agencyName: string;
   reportDate: string;
   savedCounts: Record<string, string>;
+  sequencePairs: Record<string, SequencePair[]>;
   grandTotal: string;
   createdAt: any;
 };
@@ -62,6 +65,7 @@ export default function Home() {
   const [count, setCount] = useState<bigint | null>(null);
   const [category, setCategory] = useState<string | null>(null);
   const [savedCounts, setSavedCounts] = useState<Record<string, bigint>>({});
+  const [sequencePairs, setSequencePairs] = useState<Record<string, SequencePair[]>>({});
   
   const [agencyNumber, setAgencyNumber] = useState<string>("");
   const [agencyName, setAgencyName] = useState<string | null>(null);
@@ -136,10 +140,14 @@ export default function Home() {
   }, []);
 
   const handleSave = () => {
-    if (category && count !== null) {
+    if (category && count !== null && initialCode && finalCode) {
       setSavedCounts(prevCounts => ({
         ...prevCounts,
         [category]: (prevCounts[category] || 0n) + count,
+      }));
+       setSequencePairs(prevPairs => ({
+        ...prevPairs,
+        [category]: [...(prevPairs[category] || []), { initial: initialCode, final: finalCode }]
       }));
       // Reset for next count
       resetAll();
@@ -180,6 +188,7 @@ export default function Home() {
       savedCounts: Object.fromEntries(
         Object.entries(savedCounts).map(([key, value]) => [key, value.toString()])
       ),
+      sequencePairs,
       grandTotal: grandTotal.toString(),
       createdAt: serverTimestamp(),
     };
@@ -193,6 +202,7 @@ export default function Home() {
         });
         // Clear current report data after saving
         setSavedCounts({});
+        setSequencePairs({});
         setAgencyNumber("");
         setAgencyName(null);
         setReportDate(null);
@@ -557,7 +567,7 @@ export default function Home() {
                         </Button>
                       </CardTitle>
                       <CardDescription>
-                        {report.agencyNumber} - {report.reportDate}
+                        {report.agencyNumber} - {new Date(report.createdAt?.toDate()).toLocaleDateString('pt-BR')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -578,6 +588,22 @@ export default function Home() {
                           <span>Total Geral:</span>
                           <span>{report.grandTotal}</span>
                       </div>
+                       {report.sequencePairs && Object.keys(report.sequencePairs).length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="text-xs font-semibold">Sequências Lidas:</h4>
+                          <ul className="text-xs text-muted-foreground list-disc list-inside">
+                            {Object.entries(report.sequencePairs).map(([category, pairs]) =>
+                              pairs.map((pair, index) => (
+                                <li key={`${category}-${index}`}>
+                                  <span className="font-mono">
+                                    {category.toUpperCase()}: {pair.initial} - {pair.final}
+                                  </span>
+                                </li>
+                              ))
+                            )}
+                          </ul>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))

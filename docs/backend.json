@@ -22,6 +22,11 @@
           "description": "An object with category counts.",
           "properties": {}
         },
+        "sequencePairs": {
+          "type": "object",
+          "description": "An object with scanned barcode sequence pairs for each category.",
+          "properties": {}
+        },
         "grandTotal": {
           "type": "string",
           "description": "The total count of all items."
@@ -37,6 +42,7 @@
         "agencyName",
         "reportDate",
         "savedCounts",
+        "sequencePairs",
         "grandTotal",
         "createdAt"
       ]
@@ -54,5 +60,3 @@
     }
   }
 }
-
-    
