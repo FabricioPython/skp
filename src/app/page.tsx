@@ -180,13 +180,13 @@ export default function Home() {
     setIsFetchingAgency(false);
   };
 
-  const handleGenerateAndSaveReport = async () => {
-    if (!firestore || !agencyName || !reportDate || !grandTotal) return;
-
+  const handleGenerateAndSaveReport = async (currentReportDate: string) => {
+    if (!firestore || !agencyName || !currentReportDate || !grandTotal) return;
+  
     const reportData = {
       agencyNumber,
       agencyName,
-      reportDate,
+      reportDate: currentReportDate,
       savedCounts: Object.fromEntries(
         Object.entries(savedCounts).map(([key, value]) => [key, value.toString()])
       ),
@@ -194,7 +194,7 @@ export default function Home() {
       grandTotal: grandTotal.toString(),
       createdAt: serverTimestamp(),
     };
-
+  
     try {
       if (reportsCollection) {
         await addDoc(reportsCollection, reportData);
@@ -249,7 +249,7 @@ export default function Home() {
 
 
   const handleShare = async () => {
-    if (!reportRef.current) {
+    if (!reportRef.current || !reportDate) {
       toast({
         title: "Erro",
         description: "Não foi possível capturar o relatório.",
@@ -257,6 +257,7 @@ export default function Home() {
       });
       return;
     }
+    const currentReportDate = reportDate;
 
     try {
       // Temporarily set background to white for capture
@@ -287,13 +288,13 @@ export default function Home() {
              await navigator.share({
               files: [file],
               title: 'Relatório de Contagem de Estoque',
-              text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${reportDate}.`,
+              text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${currentReportDate}.`,
             });
-            await handleGenerateAndSaveReport();
+            await handleGenerateAndSaveReport(currentReportDate);
           } catch (shareError) {
              console.log("Compartilhamento cancelado ou falhou", shareError)
              // Even if sharing fails, we save the report
-             await handleGenerateAndSaveReport();
+             await handleGenerateAndSaveReport(currentReportDate);
           }
         } else {
           // Fallback for desktop or browsers that don't support sharing files
@@ -307,7 +308,7 @@ export default function Home() {
             title: "Imagem Salva",
             description: "Imagem do relatório baixada. Você pode compartilhá-la manualmente.",
           });
-          await handleGenerateAndSaveReport();
+          await handleGenerateAndSaveReport(currentReportDate);
         }
       }, 'image/png');
     } catch (error) {
