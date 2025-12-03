@@ -259,10 +259,17 @@ export default function Home() {
     }
 
     try {
+      // Temporarily set background to white for capture
+      reportRef.current.style.backgroundColor = 'white';
+
       const canvas = await html2canvas(reportRef.current, {
         useCORS: true,
-        backgroundColor: null,
+        scale: 2, // Increase resolution
       });
+      
+      // Revert background color
+      reportRef.current.style.backgroundColor = '';
+
       canvas.toBlob(async (blob) => {
         if (!blob) {
           toast({
@@ -338,10 +345,10 @@ export default function Home() {
   });
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-gray-50">
+    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-secondary">
       <div className="w-full max-w-md space-y-6">
-        <header className="text-center">
-          <h1 className="text-4xl font-bold font-headline text-primary">
+        <header className="text-center py-4">
+          <h1 className="text-4xl font-bold tracking-tight text-primary">
             counterSKP
           </h1>
           <p className="text-muted-foreground mt-2">
@@ -349,57 +356,57 @@ export default function Home() {
           </p>
         </header>
 
-        <Card className="shadow-lg bg-white rounded-xl">
+        <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Leitura de Código de Barras</CardTitle>
             <CardDescription>
-              Digitalize o código de barras do primeiro e do último item para calcular o total.
+              Digitalize o código de barras do primeiro e do último item.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">
+              <Label className="text-sm font-medium text-muted-foreground">
                 Código de Barras Inicial
-              </h3>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-md px-2 border">
-                  <p className="text-lg font-mono tracking-wide text-foreground break-all text-center">
-                    {initialCode || "----------"}
+              </Label>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border border-dashed">
+                  <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
+                    {initialCode || "..."}
                   </p>
                 </div>
-                <Button variant="outline" size="icon" className="h-16 w-16" onClick={() => setScanningFor("initial")}>
+                <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0" onClick={() => setScanningFor("initial")}>
                   <Camera className="h-6 w-6" />
                 </Button>
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">
+              <Label className="text-sm font-medium text-muted-foreground">
                 Código de Barras Final
-              </h3>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-md px-2 border">
-                  <p className="text-lg font-mono tracking-wide text-foreground break-all text-center">
-                    {finalCode || "----------"}
+              </Label>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border border-dashed">
+                  <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
+                    {finalCode || "..."}
                   </p>
                 </div>
-                <Button variant="outline" size="icon" className="h-16 w-16" onClick={() => setScanningFor("final")} disabled={!initialCode}>
+                <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0" onClick={() => setScanningFor("final")} disabled={!initialCode}>
                   <Camera className="h-6 w-6" />
                 </Button>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex-col gap-4">
-            <Button
+          <CardFooter className="flex-col gap-3 pt-4">
+             <Button
               size="lg"
               onClick={handleCount}
               disabled={!initialCode || !finalCode}
-              className="w-full rounded-full"
+              className="w-full"
             >
               <Calculator className="mr-2 h-4 w-4" /> Contar
             </Button>
             {(initialCode || finalCode) && (
-              <Button variant="outline" onClick={resetAll} className="w-full rounded-full">
-                <RefreshCcw className="mr-2 h-4 w-4" /> Reiniciar
+              <Button variant="ghost" onClick={resetAll} className="w-full text-muted-foreground">
+                <RefreshCcw className="mr-2 h-4 w-4" /> Reiniciar Leitura
               </Button>
             )}
           </CardFooter>
@@ -407,23 +414,23 @@ export default function Home() {
         
         {error && (
           <Alert variant="destructive">
-            <AlertTitle>Erro</AlertTitle>
+            <AlertTitle>Erro na Contagem</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
         {count !== null && (
-          <Card className="shadow-lg bg-white rounded-xl">
+          <Card className="shadow-lg animate-in fade-in-50">
             <CardHeader>
               <CardTitle>Resultado da Contagem</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-accent text-accent-foreground rounded-xl p-4">
-                <p className="text-center text-xl">Total de Itens</p>
-                <p className="text-center text-7xl font-bold">{count.toString()}</p>
+            <CardContent className="space-y-6">
+              <div className="bg-primary/10 border-2 border-primary/20 border-dashed text-primary rounded-xl p-4">
+                <p className="text-center text-lg">Total de Itens</p>
+                <p className="text-center text-7xl font-bold tracking-tighter">{count.toString()}</p>
               </div>
               <div>
-                <Label>Selecione a Categoria para Salvar</Label>
+                <Label className="mb-3 block text-center">Selecione a Categoria para Salvar</Label>
                 <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4 pt-2">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="a" id="r1" />
@@ -441,168 +448,173 @@ export default function Home() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button size="lg" onClick={handleSave} disabled={!category} className="w-full rounded-full">
-                <Save className="mr-2 h-4 w-4" /> Salvar
+              <Button size="lg" onClick={handleSave} disabled={!category} className="w-full">
+                <Save className="mr-2 h-4 w-4" /> Salvar Contagem
               </Button>
             </CardFooter>
           </Card>
         )}
 
         {Object.keys(savedCounts).length > 0 && (
-          <Card className="bg-secondary rounded-xl">
+          <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
+              <CardTitle className="flex items-center gap-2">
                 <Archive className="h-5 w-5" />
-                Totais por Categoria
+                Resumo da Sessão
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-3">
                {ALL_CATEGORIES.map((cat) => (
-                <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
-                  <span className="font-medium">Tipo {cat.toUpperCase()}</span>
+                <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-lg">
+                  <span className="font-medium text-lg">Tipo {cat.toUpperCase()}</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleIncrementClick(cat)}>
-                      <PlusCircle className="h-5 w-5 text-green-500" />
+                    <span className="font-bold text-2xl tracking-tight">{(savedCounts[cat] || 0n).toString()}</span>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-green-600" onClick={() => handleIncrementClick(cat)}>
+                      <PlusCircle className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
               ))}
-              <Separator className="my-4 bg-border" />
-              <div className="flex justify-between items-center p-2">
+              <Separator className="my-4" />
+              <div className="flex justify-between items-center p-3 rounded-lg bg-primary/10">
                 <span className="font-bold text-lg">Total Geral</span>
-                <span className="font-extrabold text-xl">{grandTotal.toString()}</span>
+                <span className="font-extrabold text-2xl text-primary tracking-tight">{grandTotal.toString()}</span>
               </div>
             </CardContent>
           </Card>
         )}
         
         {Object.keys(savedCounts).length > 0 && (
-          <Card className="rounded-xl">
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Gerar Relatório</CardTitle>
-              <CardDescription>Encontre uma agência para gerar um relatório final.</CardDescription>
+              <CardDescription>Insira o número da agência para finalizar.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-2">
+            <CardContent>
+              <div className="flex items-start gap-3">
                 <Input
                   type="number"
-                  placeholder="Digite o número da agência"
+                  placeholder="Nº da agência"
                   value={agencyNumber}
                   onChange={(e) => setAgencyNumber(e.target.value)}
                   disabled={isFetchingAgency}
+                  className="h-12 text-lg"
                 />
-                <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber}>
-                  <Search className="h-4 w-4" />
+                <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber} className="h-12" size="icon">
+                  <Search className="h-5 w-5" />
                 </Button>
               </div>
-              {isFetchingAgency && <p className="text-center text-sm text-muted-foreground">Carregando...</p>}
+              {isFetchingAgency && <p className="text-center text-sm text-muted-foreground pt-3">Buscando...</p>}
               {agencyError && (
-                <Alert variant="destructive">
-                  <AlertTitle>Erro</AlertTitle>
-                  <AlertDescription>{agencyError}</AlertDescription>
-                </Alert>
+                <div className="pt-3">
+                  <Alert variant="destructive">
+                    <AlertTitle>Erro</AlertTitle>
+                    <AlertDescription>{agencyError}</AlertDescription>
+                  </Alert>
+                </div>
               )}
             </CardContent>
           </Card>
         )}
         
         {agencyName && reportDate && (
-          <Card ref={reportRef} className="bg-white shadow-lg rounded-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <FileText className="h-6 w-6 text-primary" />
+          <Card ref={reportRef} className="shadow-xl border-primary/20">
+            <CardHeader className="bg-primary/5">
+              <CardTitle className="flex items-center gap-2 text-xl text-primary">
+                <FileText className="h-6 w-6" />
                 Relatório de Contagem
               </CardTitle>
               <CardDescription>
                 Resumo de contagem de caixas.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1">
+            <CardContent className="space-y-4 p-6">
+              <div className="space-y-1 text-sm">
                 <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
                 <p><span className="font-semibold">Data:</span> {reportDate}</p>
               </div>
               <Separator />
               <div>
-                <h4 className="font-semibold mb-2">Totais por Categoria:</h4>
+                <h4 className="font-semibold mb-2 text-base">Totais por Categoria:</h4>
                 <div className="space-y-2">
                   {ALL_CATEGORIES.map((cat) => (
-                    <div key={cat} className="flex justify-between items-center bg-muted p-2 rounded-md">
+                    <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-md">
                       <span className="font-medium">Tipo {cat.toUpperCase()}</span>
                       <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between items-center bg-muted p-2 rounded-md">
+                  <div className="flex justify-between items-center bg-muted p-3 rounded-md">
                     <span className="font-medium">Tipo AB</span>
                     <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
                   </div>
                 </div>
               </div>
               <Separator />
-              <div className="flex justify-between items-center p-2 rounded-md bg-primary text-primary-foreground">
+              <div className="flex justify-between items-center p-4 rounded-lg bg-primary text-primary-foreground">
                 <span className="font-bold text-lg">Total Geral</span>
-                <span className="font-extrabold text-2xl">{grandTotal.toString()}</span>
+                <span className="font-extrabold text-2xl tracking-tight">{grandTotal.toString()}</span>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={handleShare} className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full">
-                <Share2 className="mr-2 h-4 w-4" /> Compartilhar e Salvar
+            <CardFooter className="bg-primary/5 p-4">
+              <Button onClick={handleShare} className="w-full h-12 text-base" size="lg" variant="default">
+                <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Salvar
               </Button>
             </CardFooter>
           </Card>
         )}
 
         {sortedReports && sortedReports.length > 0 && (
-          <Card className="rounded-xl">
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Relatórios Salvos</CardTitle>
               <CardDescription>Veja os relatórios de contagem anteriores.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {reportsLoading ? (
-                <p>Carregando relatórios...</p>
+                <p className="text-muted-foreground text-center">Carregando relatórios...</p>
               ) : (
                 sortedReports.map((report) => (
                   <Card key={report.id} className="bg-white shadow-md">
-                    <CardHeader>
+                    <CardHeader className="pb-4">
                       <CardTitle className="flex justify-between items-center text-lg">
                         <span>{report.agencyName}</span>
-                        <Button variant="ghost" size="icon" onClick={() => openDeleteConfirmation(report.id)}>
-                          <Trash2 className="h-5 w-5 text-destructive" />
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8" onClick={() => openDeleteConfirmation(report.id)}>
+                          <Trash2 className="h-5 w-5" />
                         </Button>
                       </CardTitle>
                       <CardDescription>
-                        {report.agencyNumber} - {report.createdAt ? new Date(report.createdAt.toDate()).toLocaleDateString('pt-BR') : 'Data inválida'}
+                        {report.agencyNumber} &middot; {report.createdAt ? new Date(report.createdAt.toDate()).toLocaleDateString('pt-BR') : 'Data inválida'}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-1 text-sm">
                       {ALL_CATEGORIES.map(cat => (
-                        <div key={cat} className="flex justify-between items-center text-sm">
+                        <div key={cat} className="flex justify-between items-center">
                           <span>Tipo {cat.toUpperCase()}:</span>
                           <span className="font-medium">{(report.savedCounts[cat] || '0')}</span>
                         </div>
                       ))}
-                       <div className="flex justify-between items-center text-sm">
+                       <div className="flex justify-between items-center">
                           <span>Tipo AB:</span>
                           <span className="font-medium">
                             {(BigInt(report.savedCounts.a || '0') + BigInt(report.savedCounts.b || '0')).toString()}
                           </span>
                         </div>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between items-center font-bold">
+                      </div>
+                      <Separator/>
+                      <div className="flex justify-between items-center font-bold text-base">
                           <span>Total Geral:</span>
-                          <span>{report.grandTotal}</span>
+                          <span className="text-primary">{report.grandTotal}</span>
                       </div>
                        {report.sequencePairs && Object.keys(report.sequencePairs).length > 0 && (
-                        <div className="mt-4">
-                          <h4 className="text-xs font-semibold">Sequências Lidas:</h4>
-                          <ul className="text-xs text-muted-foreground list-disc list-inside">
+                        <div className="pt-2">
+                          <h4 className="text-xs font-semibold text-muted-foreground">Sequências Lidas:</h4>
+                          <ul className="text-xs text-muted-foreground space-y-1 mt-1">
                             {Object.entries(report.sequencePairs).map(([category, pairs]) =>
                               pairs.map((pair, index) => (
                                 <li key={`${category}-${index}`}>
-                                  <span className="font-mono">
-                                    {category.toUpperCase()}: {pair.initial} - {pair.final}
+                                  <span className="font-mono bg-gray-100 px-1 py-0.5 rounded">
+                                    {category.toUpperCase()}: {pair.initial} &rarr; {pair.final}
                                   </span>
                                 </li>
                               ))
