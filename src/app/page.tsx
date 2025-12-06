@@ -249,7 +249,7 @@ export default function Home() {
 
 
   const handleShare = async () => {
-    if (!reportRef.current || !reportDate) {
+    if (!reportRef.current) {
       toast({
         title: "Erro",
         description: "Não foi possível capturar o relatório.",
@@ -257,7 +257,16 @@ export default function Home() {
       });
       return;
     }
-    const currentReportDate = reportDate;
+    const shareDate = new Date().toLocaleDateString('pt-BR');
+    if (!shareDate) {
+        toast({
+            title: "Erro",
+            description: "Não foi possível obter a data atual.",
+            variant: "destructive",
+        });
+        return;
+    }
+
 
     try {
       // Temporarily set background to white for capture
@@ -288,13 +297,13 @@ export default function Home() {
              await navigator.share({
               files: [file],
               title: 'Relatório de Contagem de Estoque',
-              text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${currentReportDate}.`,
+              text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${shareDate}.`,
             });
-            await handleGenerateAndSaveReport(currentReportDate);
+            await handleGenerateAndSaveReport(shareDate);
           } catch (shareError) {
              console.log("Compartilhamento cancelado ou falhou", shareError)
              // Even if sharing fails, we save the report
-             await handleGenerateAndSaveReport(currentReportDate);
+             await handleGenerateAndSaveReport(shareDate);
           }
         } else {
           // Fallback for desktop or browsers that don't support sharing files
@@ -308,7 +317,7 @@ export default function Home() {
             title: "Imagem Salva",
             description: "Imagem do relatório baixada. Você pode compartilhá-la manualmente.",
           });
-          await handleGenerateAndSaveReport(currentReportDate);
+          await handleGenerateAndSaveReport(shareDate);
         }
       }, 'image/png');
     } catch (error) {
@@ -584,7 +593,7 @@ export default function Home() {
                         </Button>
                       </CardTitle>
                       <CardDescription>
-                        {report.agencyNumber} &middot; {report.createdAt ? new Date(report.createdAt.toDate()).toLocaleDateString('pt-BR') : 'Data inválida'}
+                        {report.agencyNumber} &middot; {report.reportDate || (report.createdAt ? new Date(report.createdAt.toDate()).toLocaleDateString('pt-BR') : 'Data inválida')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
