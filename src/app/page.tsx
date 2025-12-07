@@ -36,6 +36,8 @@ import { Input } from "@/components/ui/input";
 import { agencies } from "@/lib/agencies";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
+import { useFirebase } from "@/firebase/provider";
+import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 
 type ScanTarget = "initial" | "final";
 const ALL_CATEGORIES = ['a', 'b', 'c'];
@@ -77,6 +79,7 @@ export default function Home() {
 
   const reportRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { firestore } = useFirebase();
 
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
 
@@ -89,6 +92,20 @@ export default function Home() {
       setReportDate(new Date().toLocaleDateString('pt-BR'));
     }
   }, [agencyName]);
+  
+  useEffect(() => {
+    if (!firestore) return;
+
+    const reportsRef = collection(firestore, "reports");
+    const q = query(reportsRef, orderBy("createdAt", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const reports = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as SavedReport[];
+        setSavedReports(reports);
+    });
+
+    return () => unsubscribe();
+  }, [firestore]);
 
 
   const handleScan = (result: string) => {
@@ -176,14 +193,40 @@ export default function Home() {
   };
 
   const handleGenerateAndSaveReport = async (currentReportDate: string) => {
-    if (!agencyName || !currentReportDate || !grandTotal) return;
+    if (!agencyName || !currentReportDate || !grandTotal || !firestore) return;
   
-    // In a static build, we can't save to a database. 
-    // This function will now only clear the current report data.
-    toast({
-      title: "Sessão Finalizada!",
-      description: "O relatório foi compartilhado. A sessão atual foi limpa.",
-    });
+    // Convert BigInts to strings for Firestore
+    const countsAsString = Object.entries(savedCounts).reduce((acc, [key, value]) => {
+      acc[key] = value.toString();
+      return acc;
+    }, {} as Record<string, string>);
+  
+    try {
+      const reportsRef = collection(firestore, "reports");
+      await addDoc(reportsRef, {
+        agencyNumber,
+        agencyName,
+        reportDate: currentReportDate,
+        savedCounts: countsAsString,
+        sequencePairs: sequencePairs,
+        grandTotal: grandTotal.toString(),
+        createdAt: serverTimestamp(),
+      });
+  
+      toast({
+        title: "Relatório Salvo e Sessão Finalizada!",
+        description: "O relatório foi salvo no banco de dados e a sessão foi limpa.",
+      });
+  
+    } catch (error) {
+      console.error("Error saving report: ", error);
+      toast({
+        title: "Erro ao Salvar Relatório",
+        description: "Não foi possível salvar o relatório no banco de dados.",
+        variant: "destructive",
+      });
+    }
+  
     // Clear current report data
     setSavedCounts({});
     setSequencePairs({});
@@ -193,14 +236,24 @@ export default function Home() {
   };
   
   const handleDeleteReport = async () => {
-    if (!reportToDelete) return;
-    // In a static build, we can't delete from a database.
-    // This is a placeholder for any local state management if needed in the future.
-    toast({
-      title: "Função Indisponível",
-      description: "A exclusão de relatórios não está disponível na versão atual.",
-      variant: "destructive",
-    });
+    if (!reportToDelete || !firestore) return;
+
+    try {
+      const reportDocRef = doc(firestore, 'reports', reportToDelete);
+      await deleteDoc(reportDocRef);
+      toast({
+        title: 'Relatório Excluído',
+        description: 'O relatório selecionado foi excluído com sucesso.',
+      });
+    } catch (error) {
+      console.error('Error deleting report: ', error);
+      toast({
+        title: 'Erro ao Excluir',
+        description: 'Não foi possível excluir o relatório.',
+        variant: 'destructive',
+      });
+    }
+    
     setIsDeleteAlertOpen(false);
     setReportToDelete(null);
   };
@@ -264,7 +317,7 @@ export default function Home() {
             await handleGenerateAndSaveReport(shareDate);
           } catch (shareError) {
              console.log("Compartilhamento cancelado ou falhou", shareError)
-             // Even if sharing fails, we clear the session
+             // Even if sharing fails, we save the report and clear the session
              await handleGenerateAndSaveReport(shareDate);
           }
         } else {
@@ -532,6 +585,36 @@ export default function Home() {
                 <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
               </Button>
             </CardFooter>
+          </Card>
+        )}
+        
+        {sortedReports && sortedReports.length > 0 && (
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Relatórios Salvos</CardTitle>
+              <CardDescription>
+                Relatórios salvos de sessões anteriores.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {sortedReports.map((report) => (
+                <div key={report.id} className="border p-4 rounded-lg flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">{report.agencyName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {report.reportDate} - Total: {report.grandTotal}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => openDeleteConfirmation(report.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </CardContent>
           </Card>
         )}
 
