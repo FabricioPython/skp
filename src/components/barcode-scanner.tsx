@@ -48,20 +48,20 @@ export default function BarcodeScanner({
   useEffect(() => {
     const getCameraPermission = async () => {
       try {
+        // Request permission and get stream
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         setHasCameraPermission(true);
-        // We don't need to manually set srcObject for useZxing's ref
-        stream.getTracks().forEach(track => track.stop()); // Stop the stream as useZxing will manage it.
+        // Important: Stop the stream immediately after getting permission.
+        // useZxing will manage its own stream.
+        stream.getTracks().forEach(track => track.stop());
       } catch (error) {
         console.error('Erro ao acessar a câmera:', error);
         setHasCameraPermission(false);
       }
     };
 
-    if (!paused) {
-      getCameraPermission();
-    }
-  }, [paused]);
+    getCameraPermission();
+  }, []); // Empty dependency array means this runs only once on mount
 
 
   return (
