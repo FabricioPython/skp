@@ -304,13 +304,10 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-secondary">
       <div className="w-full max-w-5xl space-y-4">
-        <header className="text-center py-2 relative">
-          <h1 className="text-2xl font-bold tracking-tight text-primary">
+        <header className="text-center py-4 relative">
+          <h1 className="text-3xl font-bold tracking-tight text-primary">
             counterSKP
           </h1>
-          <p className="text-xs text-muted-foreground">
-            Digitalize códigos de barras para contar a quantidade de caixas.
-          </p>
           <div className="absolute top-0 right-0">
              <Link href="/reports" passHref>
                 <Button variant="outline" size="icon">
