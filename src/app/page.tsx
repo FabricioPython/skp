@@ -36,9 +36,6 @@ import { Input } from "@/components/ui/input";
 import { agencies } from "@/lib/agencies";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
-import { useFirebase } from "@/firebase";
-import { addDoc, collection, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
-import { useCollection } from "@/firebase";
 
 type ScanTarget = "initial" | "final";
 const ALL_CATEGORIES = ['a', 'b', 'c'];
@@ -80,10 +77,8 @@ export default function Home() {
 
   const reportRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { firestore } = useFirebase();
 
-  const reportsCollection = firestore ? collection(firestore, 'reports') : null;
-  const { data: savedReports, loading: reportsLoading } = useCollection<SavedReport>(reportsCollection);
+  const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
 
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
@@ -181,65 +176,33 @@ export default function Home() {
   };
 
   const handleGenerateAndSaveReport = async (currentReportDate: string) => {
-    if (!firestore || !agencyName || !currentReportDate || !grandTotal) return;
+    if (!agencyName || !currentReportDate || !grandTotal) return;
   
-    const reportData = {
-      agencyNumber,
-      agencyName,
-      reportDate: currentReportDate,
-      savedCounts: Object.fromEntries(
-        Object.entries(savedCounts).map(([key, value]) => [key, value.toString()])
-      ),
-      sequencePairs,
-      grandTotal: grandTotal.toString(),
-      createdAt: serverTimestamp(),
-    };
-  
-    try {
-      if (reportsCollection) {
-        await addDoc(reportsCollection, reportData);
-        toast({
-          title: "Relatório Salvo!",
-          description: "Seu relatório de contagem foi salvo com sucesso.",
-        });
-        // Clear current report data after saving
-        setSavedCounts({});
-        setSequencePairs({});
-        setAgencyNumber("");
-        setAgencyName(null);
-        setReportDate(null);
-      }
-    } catch (e) {
-      console.error("Erro ao salvar relatório: ", e);
-      toast({
-        title: "Erro ao Salvar",
-        description: "Não foi possível salvar o relatório. Tente novamente.",
-        variant: "destructive",
-      });
-    }
+    // In a static build, we can't save to a database. 
+    // This function will now only clear the current report data.
+    toast({
+      title: "Sessão Finalizada!",
+      description: "O relatório foi compartilhado. A sessão atual foi limpa.",
+    });
+    // Clear current report data
+    setSavedCounts({});
+    setSequencePairs({});
+    setAgencyNumber("");
+    setAgencyName(null);
+    setReportDate(null);
   };
   
   const handleDeleteReport = async () => {
-    if (!firestore || !reportToDelete) return;
-    try {
-      if (reportsCollection) {
-        await deleteDoc(doc(firestore, "reports", reportToDelete));
-        toast({
-          title: "Relatório Excluído",
-          description: "O relatório foi excluído com sucesso.",
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao excluir relatório: ", error);
-      toast({
-        title: "Erro ao Excluir",
-        description: "Não foi possível excluir o relatório.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleteAlertOpen(false);
-      setReportToDelete(null);
-    }
+    if (!reportToDelete) return;
+    // In a static build, we can't delete from a database.
+    // This is a placeholder for any local state management if needed in the future.
+    toast({
+      title: "Função Indisponível",
+      description: "A exclusão de relatórios não está disponível na versão atual.",
+      variant: "destructive",
+    });
+    setIsDeleteAlertOpen(false);
+    setReportToDelete(null);
   };
 
   const openDeleteConfirmation = (reportId: string) => {
@@ -266,7 +229,6 @@ export default function Home() {
         });
         return;
     }
-
 
     try {
       // Temporarily set background to white for capture
@@ -302,7 +264,7 @@ export default function Home() {
             await handleGenerateAndSaveReport(shareDate);
           } catch (shareError) {
              console.log("Compartilhamento cancelado ou falhou", shareError)
-             // Even if sharing fails, we save the report
+             // Even if sharing fails, we clear the session
              await handleGenerateAndSaveReport(shareDate);
           }
         } else {
@@ -567,78 +529,12 @@ export default function Home() {
             </CardContent>
             <CardFooter className="bg-primary/5 p-4">
               <Button onClick={handleShare} className="w-full h-12 text-base" size="lg" variant="default">
-                <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Salvar
+                <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
               </Button>
             </CardFooter>
           </Card>
         )}
 
-        {sortedReports && sortedReports.length > 0 && (
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle>Relatórios Salvos</CardTitle>
-              <CardDescription>Veja os relatórios de contagem anteriores.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {reportsLoading ? (
-                <p className="text-muted-foreground text-center">Carregando relatórios...</p>
-              ) : (
-                sortedReports.map((report) => (
-                  <Card key={report.id} className="bg-white shadow-md">
-                    <CardHeader className="pb-4">
-                      <CardTitle className="flex justify-between items-center text-lg">
-                        <span>{report.agencyName}</span>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8" onClick={() => openDeleteConfirmation(report.id)}>
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
-                      </CardTitle>
-                      <CardDescription>
-                        {report.agencyNumber} &middot; {report.reportDate || (report.createdAt ? new Date(report.createdAt.toDate()).toLocaleDateString('pt-BR') : 'Data inválida')}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-1 text-sm">
-                      {ALL_CATEGORIES.map(cat => (
-                        <div key={cat} className="flex justify-between items-center">
-                          <span>Tipo {cat.toUpperCase()}:</span>
-                          <span className="font-medium">{(report.savedCounts[cat] || '0')}</span>
-                        </div>
-                      ))}
-                       <div className="flex justify-between items-center">
-                          <span>Tipo AB:</span>
-                          <span className="font-medium">
-                            {(BigInt(report.savedCounts.a || '0') + BigInt(report.savedCounts.b || '0')).toString()}
-                          </span>
-                        </div>
-                      </div>
-                      <Separator/>
-                      <div className="flex justify-between items-center font-bold text-base">
-                          <span>Total Geral:</span>
-                          <span className="text-primary">{report.grandTotal}</span>
-                      </div>
-                       {report.sequencePairs && Object.keys(report.sequencePairs).length > 0 && (
-                        <div className="pt-2">
-                          <h4 className="text-xs font-semibold text-muted-foreground">Sequências Lidas:</h4>
-                          <ul className="text-xs text-muted-foreground space-y-1 mt-1">
-                            {Object.entries(report.sequencePairs).map(([category, pairs]) =>
-                              pairs.map((pair, index) => (
-                                <li key={`${category}-${index}`}>
-                                  <span className="font-mono bg-gray-100 px-1 py-0.5 rounded">
-                                    {category.toUpperCase()}: {pair.initial} &rarr; {pair.final}
-                                  </span>
-                                </li>
-                              ))
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       <Dialog open={!!scanningFor} onOpenChange={(open) => !open && setScanningFor(null)}>
