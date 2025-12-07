@@ -303,12 +303,12 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-secondary">
-      <div className="w-full max-w-md space-y-6">
-        <header className="text-center py-4 relative">
-          <h1 className="text-4xl font-bold tracking-tight text-primary">
+      <div className="w-full max-w-4xl space-y-4">
+        <header className="text-center py-2 relative">
+          <h1 className="text-3xl font-bold tracking-tight text-primary">
             counterSKP
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-1">
             Digitalize códigos de barras para contar a quantidade de caixas.
           </p>
           <div className="absolute top-0 right-0">
@@ -321,136 +321,142 @@ export default function Home() {
           </div>
         </header>
 
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Leitura de Código de Barras</CardTitle>
-            <CardDescription>
-              Digitalize o código de barras do primeiro e do último item.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">
-                Código de Barras Inicial
-              </Label>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border border-dashed">
-                  <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
-                    {initialCode || "..."}
-                  </p>
-                </div>
-                <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0" onClick={() => setScanningFor("initial")}>
-                  <Camera className="h-6 w-6" />
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">
-                Código de Barras Final
-              </Label>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border border-dashed">
-                  <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
-                    {finalCode || "..."}
-                  </p>
-                </div>
-                <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0" onClick={() => setScanningFor("final")} disabled={!initialCode}>
-                  <Camera className="h-6 w-6" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex-col gap-3 pt-4">
-             <Button
-              size="lg"
-              onClick={handleCount}
-              disabled={!initialCode || !finalCode}
-              className="w-full"
-            >
-              <Calculator className="mr-2 h-4 w-4" /> Contar
-            </Button>
-            {(initialCode || finalCode) && (
-              <Button variant="ghost" onClick={resetAll} className="w-full text-muted-foreground">
-                <RefreshCcw className="mr-2 h-4 w-4" /> Reiniciar Leitura
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
-        
-        {error && (
-          <Alert variant="destructive">
-            <AlertTitle>Erro na Contagem</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {count !== null && (
-          <Card className="shadow-lg animate-in fade-in-50">
-            <CardHeader>
-              <CardTitle>Resultado da Contagem</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-primary/10 border-2 border-primary/20 border-dashed text-primary rounded-xl p-4">
-                <p className="text-center text-lg">Total de Itens</p>
-                <p className="text-center text-7xl font-bold tracking-tighter">{count.toString()}</p>
-              </div>
-              <div>
-                <Label className="mb-3 block text-center">Selecione a Categoria para Salvar</Label>
-                <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-2 pt-2">
-                  <div className="flex items-center space-x-3">
-                    <RadioGroupItem value="a" id="r1" className="h-6 w-6" />
-                    <Label htmlFor="r1" className="text-lg p-2">Tipo A</Label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <RadioGroupItem value="b" id="r2" className="h-6 w-6" />
-                    <Label htmlFor="r2" className="text-lg p-2">Tipo B</Label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <RadioGroupItem value="c" id="r3" className="h-6 w-6" />
-                    <Label htmlFor="r3" className="text-lg p-2">Tipo C</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button size="lg" onClick={handleSave} disabled={!category} className="w-full">
-                <Save className="mr-2 h-4 w-4" /> Salvar Contagem
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
-
-        {Object.keys(savedCounts).length > 0 && (
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Archive className="h-5 w-5" />
-                Resumo da Sessão
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-               {ALL_CATEGORIES.map((cat) => (
-                <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-lg">
-                  <span className="font-medium text-lg">Tipo {cat.toUpperCase()}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-2xl tracking-tight">{(savedCounts[cat] || 0n).toString()}</span>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-green-600" onClick={() => handleIncrementClick(cat)}>
-                      <PlusCircle className="h-5 w-5" />
+        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-6 md:items-start">
+          <div className="space-y-6">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle>Leitura de Código de Barras</CardTitle>
+                <CardDescription>
+                  Digitalize o código de barras do primeiro e do último item.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Código de Barras Inicial
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border border-dashed">
+                      <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
+                        {initialCode || "..."}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0" onClick={() => setScanningFor("initial")}>
+                      <Camera className="h-6 w-6" />
                     </Button>
                   </div>
                 </div>
-              ))}
-              <Separator className="my-4" />
-              <div className="flex justify-between items-center p-3 rounded-lg bg-primary/10">
-                <span className="font-bold text-lg">Total Geral</span>
-                <span className="font-extrabold text-2xl text-primary tracking-tight">{grandTotal.toString()}</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Código de Barras Final
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border border-dashed">
+                      <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
+                        {finalCode || "..."}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0" onClick={() => setScanningFor("final")} disabled={!initialCode}>
+                      <Camera className="h-6 w-6" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex-col gap-3 pt-4">
+                 <Button
+                  size="lg"
+                  onClick={handleCount}
+                  disabled={!initialCode || !finalCode}
+                  className="w-full"
+                >
+                  <Calculator className="mr-2 h-4 w-4" /> Contar
+                </Button>
+                {(initialCode || finalCode) && (
+                  <Button variant="ghost" onClick={resetAll} className="w-full text-muted-foreground">
+                    <RefreshCcw className="mr-2 h-4 w-4" /> Reiniciar Leitura
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+
+             {Object.keys(savedCounts).length > 0 && (
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Archive className="h-5 w-5" />
+                    Resumo da Sessão
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                   {ALL_CATEGORIES.map((cat) => (
+                    <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-lg">
+                      <span className="font-medium text-lg">Tipo {cat.toUpperCase()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-2xl tracking-tight">{(savedCounts[cat] || 0n).toString()}</span>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-green-600" onClick={() => handleIncrementClick(cat)}>
+                          <PlusCircle className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <Separator className="my-4" />
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-primary/10">
+                    <span className="font-bold text-lg">Total Geral</span>
+                    <span className="font-extrabold text-2xl text-primary tracking-tight">{grandTotal.toString()}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+          
+          <div className="space-y-6 mt-6 md:mt-0">
+            {error && (
+              <Alert variant="destructive">
+                <AlertTitle>Erro na Contagem</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {count !== null && (
+              <Card className="shadow-lg animate-in fade-in-50">
+                <CardHeader>
+                  <CardTitle>Resultado da Contagem</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="bg-primary/10 border-2 border-primary/20 border-dashed text-primary rounded-xl p-4">
+                    <p className="text-center text-lg">Total de Itens</p>
+                    <p className="text-center text-7xl font-bold tracking-tighter">{count.toString()}</p>
+                  </div>
+                  <div>
+                    <Label className="mb-3 block text-center">Selecione a Categoria para Salvar</Label>
+                    <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-2 pt-2">
+                      <div className="flex items-center space-x-3">
+                        <RadioGroupItem value="a" id="r1" className="h-6 w-6" />
+                        <Label htmlFor="r1" className="text-lg p-2">Tipo A</Label>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <RadioGroupItem value="b" id="r2" className="h-6 w-6" />
+                        <Label htmlFor="r2" className="text-lg p-2">Tipo B</Label>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <RadioGroupItem value="c" id="r3" className="h-6 w-6" />
+                        <Label htmlFor="r3" className="text-lg p-2">Tipo C</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button size="lg" onClick={handleSave} disabled={!category} className="w-full">
+                    <Save className="mr-2 h-4 w-4" /> Salvar Contagem
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
+          </div>
+        </div>
+
         {Object.keys(savedCounts).length > 0 && (
-          <Card className="shadow-lg">
+          <Card className="shadow-lg mt-6">
             <CardHeader>
               <CardTitle>Gerar Relatório</CardTitle>
               <CardDescription>Insira o número da agência para finalizar.</CardDescription>
@@ -483,7 +489,7 @@ export default function Home() {
         )}
         
         {agencyName && reportDate && (
-          <div className="space-y-4">
+          <div className="space-y-4 mt-6">
             <Card ref={reportRef} className="shadow-xl border-primary/20">
               <CardHeader className="bg-primary/5">
                 <CardTitle className="flex items-center gap-2 text-xl text-primary">
