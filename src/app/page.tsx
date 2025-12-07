@@ -627,7 +627,7 @@ export default function Home() {
           </DialogHeader>
           <div className="relative -mx-6 -mb-6 bg-black rounded-b-lg overflow-hidden">
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <div className="w-[90%] h-px bg-red-500/80 animate-pulse"></div>
+                <div className="w-[90%] h-2 bg-red-500/50"></div>
             </div>
             <BarcodeScanner onScan={handleScan} paused={!scanningFor} />
           </div>
