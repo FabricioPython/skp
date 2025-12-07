@@ -457,18 +457,18 @@ export default function Home() {
               </div>
               <div>
                 <Label className="mb-3 block text-center">Selecione a Categoria para Salvar</Label>
-                <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4 pt-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="a" id="r1" />
-                    <Label htmlFor="r1">Tipo A</Label>
+                <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-2 pt-2">
+                  <div className="flex items-center space-x-3">
+                    <RadioGroupItem value="a" id="r1" className="h-6 w-6" />
+                    <Label htmlFor="r1" className="text-lg p-2">Tipo A</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="b" id="r2" />
-                    <Label htmlFor="r2">Tipo B</Label>
+                  <div className="flex items-center space-x-3">
+                    <RadioGroupItem value="b" id="r2" className="h-6 w-6" />
+                    <Label htmlFor="r2" className="text-lg p-2">Tipo B</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="c" id="r3" />
-                    <Label htmlFor="r3">Tipo C</Label>
+                  <div className="flex items-center space-x-3">
+                    <RadioGroupItem value="c" id="r3" className="h-6 w-6" />
+                    <Label htmlFor="r3" className="text-lg p-2">Tipo C</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -693,3 +693,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
