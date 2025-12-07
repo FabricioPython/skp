@@ -160,7 +160,14 @@ export default function Home() {
   };
 
   const handleGenerateAndSaveReport = async (currentReportDate: string) => {
-    if (!agencyName || !currentReportDate || !grandTotal || !firestore) return;
+    if (!agencyName || !currentReportDate || grandTotal === 0n || !firestore) {
+      toast({
+        title: "Nada para Salvar",
+        description: "Não há dados de contagem para salvar.",
+        variant: "destructive",
+      });
+      return;
+    }
   
     // Convert BigInts to strings for Firestore
     const countsAsString = Object.entries(savedCounts).reduce((acc, [key, value]) => {
@@ -194,7 +201,7 @@ export default function Home() {
       });
     }
   
-    // Clear current report data
+    // Clear current report data after saving
     setSavedCounts({});
     setSequencePairs({});
     setAgencyNumber("");
@@ -224,14 +231,16 @@ export default function Home() {
     try {
       // Temporarily set background to white for capture
       reportRef.current.style.backgroundColor = 'white';
+      reportRef.current.style.color = 'black'; // Ensure text is visible
 
       const canvas = await html2canvas(reportRef.current, {
         useCORS: true,
         scale: 2, // Increase resolution
       });
       
-      // Revert background color
+      // Revert background and text color
       reportRef.current.style.backgroundColor = '';
+      reportRef.current.style.color = '';
 
       canvas.toBlob(async (blob) => {
         if (!blob) {
@@ -254,7 +263,11 @@ export default function Home() {
             });
             await handleGenerateAndSaveReport(shareDate);
           } catch (shareError) {
-             console.log("Compartilhamento cancelado ou falhou", shareError)
+             console.log("Compartilhamento cancelado ou falhou", shareError);
+             toast({
+                title: "Ação de Compartilhamento Interrompida",
+                description: "Salvando o relatório e finalizando a sessão mesmo assim.",
+             });
              // Even if sharing fails, we save the report and clear the session
              await handleGenerateAndSaveReport(shareDate);
           }
@@ -481,7 +494,7 @@ export default function Home() {
 
             {agencyName && reportDate && (
                 <div className="space-y-4">
-                    <Card ref={reportRef} className="shadow-xl border-primary/20">
+                    <Card ref={reportRef} className="shadow-xl border-primary/20 bg-card text-card-foreground">
                     <CardHeader className="bg-primary/5">
                         <CardTitle className="flex items-center gap-2 text-xl text-primary">
                         <FileText className="h-6 w-6" />
