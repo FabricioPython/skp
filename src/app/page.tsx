@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -543,49 +544,75 @@ export default function Home() {
         )}
         
         {agencyName && reportDate && (
-          <Card ref={reportRef} className="shadow-xl border-primary/20">
-            <CardHeader className="bg-primary/5">
-              <CardTitle className="flex items-center gap-2 text-xl text-primary">
-                <FileText className="h-6 w-6" />
-                Relatório de Contagem
-              </CardTitle>
-              <CardDescription>
-                Resumo de contagem de caixas.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 p-6">
-              <div className="space-y-1 text-sm">
-                <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
-                <p><span className="font-semibold">Data:</span> {reportDate}</p>
-              </div>
-              <Separator />
-              <div>
-                <h4 className="font-semibold mb-2 text-base">Totais por Categoria:</h4>
-                <div className="space-y-2">
-                  {ALL_CATEGORIES.map((cat) => (
-                    <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-md">
-                      <span className="font-medium">Tipo {cat.toUpperCase()}</span>
-                      <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
+          <div className="space-y-4">
+            <Card ref={reportRef} className="shadow-xl border-primary/20">
+              <CardHeader className="bg-primary/5">
+                <CardTitle className="flex items-center gap-2 text-xl text-primary">
+                  <FileText className="h-6 w-6" />
+                  Relatório de Contagem
+                </CardTitle>
+                <CardDescription>
+                  Resumo de contagem de caixas.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 p-6">
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
+                  <p><span className="font-semibold">Data:</span> {reportDate}</p>
+                </div>
+                <Separator />
+                <div>
+                  <h4 className="font-semibold mb-2 text-base">Totais por Categoria:</h4>
+                  <div className="space-y-2">
+                    {ALL_CATEGORIES.map((cat) => (
+                      <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-md">
+                        <span className="font-medium">Tipo {cat.toUpperCase()}</span>
+                        <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center bg-muted p-3 rounded-md">
+                      <span className="font-medium">Tipo AB</span>
+                      <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
                     </div>
-                  ))}
-                  <div className="flex justify-between items-center bg-muted p-3 rounded-md">
-                    <span className="font-medium">Tipo AB</span>
-                    <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
                   </div>
                 </div>
-              </div>
-              <Separator />
-              <div className="flex justify-between items-center p-4 rounded-lg bg-primary text-primary-foreground">
-                <span className="font-bold text-lg">Total Geral</span>
-                <span className="font-extrabold text-2xl tracking-tight">{grandTotal.toString()}</span>
-              </div>
-            </CardContent>
-            <CardFooter className="bg-primary/5 p-4">
-              <Button onClick={handleShare} className="w-full h-12 text-base" size="lg" variant="default">
-                <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
-              </Button>
-            </CardFooter>
-          </Card>
+                 {Object.keys(sequencePairs).length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="font-semibold mb-2 text-base">Sequências Lidas:</h4>
+                      <div className="space-y-3 text-xs font-mono">
+                        {ALL_CATEGORIES.map(cat => (
+                          sequencePairs[cat] && sequencePairs[cat].length > 0 && (
+                            <div key={cat}>
+                              <p className="font-semibold mb-1 text-sm">Tipo {cat.toUpperCase()}:</p>
+                              <div className="space-y-1 pl-2 border-l-2">
+                                {sequencePairs[cat].map((pair, index) => (
+                                  <div key={index} className="flex justify-between">
+                                    <span>{pair.initial}</span>
+                                    <span>&rarr;</span>
+                                    <span>{pair.final}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+                <Separator />
+                <div className="flex justify-between items-center p-4 rounded-lg bg-primary text-primary-foreground">
+                  <span className="font-bold text-lg">Total Geral</span>
+                  <span className="font-extrabold text-2xl tracking-tight">{grandTotal.toString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+            <Button onClick={handleShare} className="w-full h-12 text-base" size="lg" variant="default">
+              <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
+            </Button>
+          </div>
         )}
         
         {sortedReports && sortedReports.length > 0 && (
@@ -627,7 +654,7 @@ export default function Home() {
           </DialogHeader>
           <div className="relative -mx-6 -mb-6 bg-black rounded-b-lg overflow-hidden">
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <div className="w-[90%] h-2 bg-red-500/50"></div>
+                <div className="w-[90%] h-[2px] bg-red-500"></div>
             </div>
             <BarcodeScanner onScan={handleScan} paused={!scanningFor} />
           </div>
@@ -666,3 +693,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
