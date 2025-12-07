@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText, Share2, PlusCircle, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText, Share2, PlusCircle, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,26 +39,12 @@ import { agencies } from "@/lib/agencies";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import { useFirebase } from "@/firebase/provider";
-import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 type ScanTarget = "initial" | "final";
 const ALL_CATEGORIES = ['a', 'b', 'c'];
 
 type SequencePair = { initial: string; final: string };
-
-type SavedReport = {
-  id: string;
-  agencyNumber: string;
-  agencyName: string;
-  reportDate: string;
-  savedCounts: Record<string, string>;
-  sequencePairs: Record<string, SequencePair[]>;
-  grandTotal: string;
-  createdAt: {
-    toDate: () => Date;
-  } | null;
-};
-
 
 export default function Home() {
   const [initialCode, setInitialCode] = useState<string | null>(null);
@@ -82,33 +69,12 @@ export default function Home() {
   const { toast } = useToast();
   const { firestore } = useFirebase();
 
-  const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
-
-  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
-
-
   useEffect(() => {
     if (agencyName) {
       setReportDate(new Date().toLocaleDateString('pt-BR'));
     }
   }, [agencyName]);
   
-  useEffect(() => {
-    if (!firestore) return;
-
-    const reportsRef = collection(firestore, "reports");
-    const q = query(reportsRef, orderBy("createdAt", "desc"));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const reports = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as SavedReport[];
-        setSavedReports(reports);
-    });
-
-    return () => unsubscribe();
-  }, [firestore]);
-
-
   const handleScan = (result: string) => {
     setError(null);
     const sanitizedResult = result.replace(/[\D\t]/g, '');
@@ -236,35 +202,6 @@ export default function Home() {
     setReportDate(null);
   };
   
-  const handleDeleteReport = async () => {
-    if (!reportToDelete || !firestore) return;
-
-    try {
-      const reportDocRef = doc(firestore, 'reports', reportToDelete);
-      await deleteDoc(reportDocRef);
-      toast({
-        title: 'Relatório Excluído',
-        description: 'O relatório selecionado foi excluído com sucesso.',
-      });
-    } catch (error) {
-      console.error('Error deleting report: ', error);
-      toast({
-        title: 'Erro ao Excluir',
-        description: 'Não foi possível excluir o relatório.',
-        variant: 'destructive',
-      });
-    }
-    
-    setIsDeleteAlertOpen(false);
-    setReportToDelete(null);
-  };
-
-  const openDeleteConfirmation = (reportId: string) => {
-    setReportToDelete(reportId);
-    setIsDeleteAlertOpen(true);
-  };
-
-
   const handleShare = async () => {
     if (!reportRef.current) {
       toast({
@@ -364,22 +301,24 @@ export default function Home() {
 
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
-  const sortedReports = savedReports?.sort((a, b) => {
-    const dateA = a.createdAt?.toDate()?.getTime() || 0;
-    const dateB = b.createdAt?.toDate()?.getTime() || 0;
-    return dateB - dateA;
-  });
-
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-secondary">
       <div className="w-full max-w-md space-y-6">
-        <header className="text-center py-4">
+        <header className="text-center py-4 relative">
           <h1 className="text-4xl font-bold tracking-tight text-primary">
             counterSKP
           </h1>
           <p className="text-muted-foreground mt-2">
             Digitalize códigos de barras para contar a quantidade de caixas.
           </p>
+          <div className="absolute top-0 right-0">
+             <Link href="/reports" passHref>
+                <Button variant="outline" size="icon">
+                  <History className="h-5 w-5" />
+                  <span className="sr-only">Ver Relatórios Salvos</span>
+                </Button>
+              </Link>
+          </div>
         </header>
 
         <Card className="shadow-lg">
@@ -614,37 +553,6 @@ export default function Home() {
             </Button>
           </div>
         )}
-        
-        {sortedReports && sortedReports.length > 0 && (
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle>Relatórios Salvos</CardTitle>
-              <CardDescription>
-                Relatórios salvos de sessões anteriores.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {sortedReports.map((report) => (
-                <div key={report.id} className="border p-4 rounded-lg flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold">{report.agencyName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {report.reportDate} - Total: {report.grandTotal}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => openDeleteConfirmation(report.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
       </div>
 
       <Dialog open={!!scanningFor} onOpenChange={(open) => !open && setScanningFor(null)}>
@@ -675,23 +583,6 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você tem certeza que deseja excluir este relatório? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteReport} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Excluir</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </main>
   );
 }
-
-    
