@@ -235,7 +235,7 @@ export default function Home() {
 
       const canvas = await html2canvas(reportRef.current, {
         useCORS: true,
-        scale: 1.5, // Increase resolution
+        scale: 1, // Increase resolution
       });
       
       // Revert background and text color
