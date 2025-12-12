@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseProvider } from '@/firebase/provider';
 
 export const metadata: Metadata = {
-  title: 'counterSKP',
+  title: 'countSKP',
   description: 'Um contador de estoque simples baseado em código de barras',
 };
 
@@ -29,5 +29,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-    

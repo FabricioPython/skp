@@ -235,7 +235,7 @@ export default function Home() {
 
       const canvas = await html2canvas(reportRef.current, {
         useCORS: true,
-        scale: 1.5, // Increase resolution
+        scale: 1, // Increase resolution
       });
       
       // Revert background and text color
@@ -319,7 +319,7 @@ export default function Home() {
       <div className="w-full max-w-5xl space-y-4">
         <header className="text-center py-4 relative">
           <h1 className="text-3xl font-bold tracking-tight text-primary">
-            counterSKP
+            countSKP
           </h1>
           <div className="absolute top-0 right-0">
              <Link href="/reports" passHref>
