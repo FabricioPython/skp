@@ -5,15 +5,15 @@
 @layer base {
   :root {
     --background: 220 44% 16%; /* #14213d */
-    --foreground: 0 0% 98%; /* #fafafa - a slightly off-white for text */
-    --card: 220 44% 20%; /* A slightly lighter blue for cards */
-    --card-foreground: 0 0% 98%;
+    --foreground: 0 0% 98%; /* #fafafa */
+    --card: 0 0% 100%; /* #ffffff */
+    --card-foreground: 220 44% 16%; /* #14213d */
     --popover: 220 44% 10%;
     --popover-foreground: 0 0% 93%;
     --primary: 38 98% 53%; /* #fca311 */
     --primary-foreground: 220 44% 10%;
-    --secondary: 0 0% 98%; /* White for secondary elements */
-    --secondary-foreground: 220 44% 16%;
+    --secondary: 220 44% 20%; /* A slightly lighter blue for secondary elements */
+    --secondary-foreground: 0 0% 98%; /* White for secondary elements */
     --muted: 220 44% 22%;
     --muted-foreground: 0 0% 70%;
     --accent: 220 44% 25%;
@@ -41,14 +41,14 @@
   .dark {
     --background: 220 44% 16%;
     --foreground: 0 0% 93%;
-    --card: 220 44% 10%;
-    --card-foreground: 0 0% 93%;
+    --card: 0 0% 100%; /* #ffffff */
+    --card-foreground: 220 44% 16%; /* #14213d */
     --popover: 220 44% 10%;
     --popover-foreground: 0 0% 93%;
     --primary: 38 98% 53%;
     --primary-foreground: 220 44% 10%;
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 220 44% 16%;
+    --secondary: 220 44% 20%;
+    --secondary-foreground: 0 0% 98%;
     --muted: 220 44% 22%;
     --muted-foreground: 0 0% 70%;
     --accent: 220 44% 25%;
