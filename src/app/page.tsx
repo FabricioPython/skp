@@ -160,8 +160,8 @@ export default function Home() {
     setIsFetchingAgency(false);
   };
 
-  const handleGenerateAndSaveReport = async (currentReportDate: string) => {
-    if (!agencyName || !currentReportDate || grandTotal === 0n || !firestore) {
+  const handleGenerateAndSaveReport = async () => {
+    if (!agencyName || !reportDate || grandTotal === 0n || !firestore) {
       toast({
         title: "Nada para Salvar",
         description: "Não há dados de contagem para salvar.",
@@ -181,7 +181,7 @@ export default function Home() {
       await addDoc(reportsRef, {
         agencyNumber,
         agencyName,
-        reportDate: currentReportDate,
+        reportDate: reportDate,
         savedCounts: countsAsString,
         sequencePairs: sequencePairs,
         grandTotal: grandTotal.toString(),
@@ -219,16 +219,7 @@ export default function Home() {
       });
       return;
     }
-    const shareDate = new Date().toLocaleDateString('pt-BR');
-    if (!shareDate) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível obter a data atual.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    
     try {
       reportRef.current.style.backgroundColor = 'white';
       reportRef.current.style.color = 'black';
@@ -257,16 +248,14 @@ export default function Home() {
            await navigator.share({
             files: [file],
             title: 'Relatório de Contagem de Estoque',
-            text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${shareDate}.`,
+            text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${reportDate}.`,
           });
-          await handleGenerateAndSaveReport(shareDate);
         } catch (shareError) {
            console.log("Compartilhamento cancelado ou falhou", shareError);
            toast({
               title: "Ação de Compartilhamento Interrompida",
-              description: "Salvando o relatório e finalizando a sessão mesmo assim.",
+              description: "Você pode tentar compartilhar novamente.",
            });
-           await handleGenerateAndSaveReport(shareDate);
         }
       } else {
         pdf.save('relatorio-estoque.pdf');
@@ -274,7 +263,6 @@ export default function Home() {
           title: "PDF Salvo",
           description: "Relatório em PDF baixado. Você pode compartilhá-lo manualmente.",
         });
-        await handleGenerateAndSaveReport(shareDate);
       }
     } catch (error) {
       console.error("Falha no compartilhamento:", error);
@@ -545,9 +533,14 @@ export default function Home() {
                         </div>
                     </CardContent>
                     </Card>
-                    <Button onClick={handleShare} className="w-full h-12 text-base" size="lg" variant="default">
-                    <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
-                    </Button>
+                    <div className="flex gap-3">
+                      <Button onClick={handleShare} className="w-full" size="lg" variant="secondary">
+                        <Share2 className="mr-2 h-5 w-5" /> Compartilhar
+                      </Button>
+                      <Button onClick={handleGenerateAndSaveReport} className="w-full" size="lg" variant="default">
+                        <Save className="mr-2 h-5 w-5" /> Salvar e Finalizar
+                      </Button>
+                    </div>
                 </div>
             )}
 
