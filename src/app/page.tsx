@@ -384,15 +384,15 @@ export default function Home() {
                   <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="a" id="r1" className="h-6 w-6" />
-                      <Label htmlFor="r1" className="text-base p-2">Tipo A</Label>
+                      <Label htmlFor="r1" className="text-base p-2">A</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="b" id="r2" className="h-6 w-6" />
-                      <Label htmlFor="r2" className="text-base p-2">Tipo B</Label>
+                      <Label htmlFor="r2" className="text-base p-2">B</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="c" id="r3" className="h-6 w-6" />
-                      <Label htmlFor="r3" className="text-base p-2">Tipo C</Label>
+                      <Label htmlFor="r3" className="text-base p-2">C</Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -418,7 +418,7 @@ export default function Home() {
                 <CardContent className="space-y-3">
                    {ALL_CATEGORIES.map((cat) => (
                     <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-lg">
-                      <span className="font-medium text-lg">Tipo {cat.toUpperCase()}</span>
+                      <span className="font-medium text-lg">{cat.toUpperCase()}</span>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-2xl tracking-tight text-foreground">{(savedCounts[cat] || 0n).toString()}</span>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-green-600" onClick={() => handleIncrementClick(cat)}>
@@ -489,7 +489,7 @@ export default function Home() {
                         <div className="space-y-2">
                             {ALL_CATEGORIES.map((cat) => (
                             <div key={cat} className="flex justify-between items-center bg-muted p-2.5 rounded-md">
-                                <span className="font-medium">Tipo {cat.toUpperCase()}</span>
+                                <span className="font-medium">{cat.toUpperCase()}</span>
                                 <span className="font-bold text-lg text-foreground">{(savedCounts[cat] || 0n).toString()}</span>
                             </div>
                             ))}
@@ -508,7 +508,7 @@ export default function Home() {
                                 {ALL_CATEGORIES.map(cat => (
                                 sequencePairs[cat] && sequencePairs[cat].length > 0 && (
                                     <div key={cat}>
-                                    <p className="font-semibold mb-1 text-sm">Tipo {cat.toUpperCase()}:</p>
+                                    <p className="font-semibold mb-1 text-sm">{cat.toUpperCase()}:</p>
                                     <div className="space-y-1 pl-2 border-l-2">
                                         {sequencePairs[cat].map((pair, index) => (
                                         <div key={index} className="flex justify-between">
@@ -566,7 +566,7 @@ export default function Home() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Incremento</AlertDialogTitle>
             <AlertDialogDescription>
-              Você tem certeza que deseja adicionar 1 à contagem de <strong>Tipo {categoryToIncrement?.toUpperCase()}</strong>?
+              Você tem certeza que deseja adicionar 1 à contagem de <strong>{categoryToIncrement?.toUpperCase()}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
