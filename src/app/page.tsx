@@ -327,7 +327,7 @@ export default function Home() {
                     Código de Barras Inicial
                   </Label>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border border-dashed">
+                    <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border">
                       <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
                         {initialCode || "..."}
                       </p>
@@ -342,7 +342,7 @@ export default function Home() {
                     Código de Barras Final
                   </Label>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border border-dashed">
+                    <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border">
                       <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
                         {finalCode || "..."}
                       </p>
