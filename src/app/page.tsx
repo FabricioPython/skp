@@ -119,6 +119,15 @@ export default function Home() {
     setCount(0n);
     setCategory(null);
   }, []);
+  
+  const clearSession = () => {
+      setSavedCounts({});
+      setSequencePairs({});
+      setAgencyNumber("");
+      setAgencyName(null);
+      setReportDate(null);
+      resetAll();
+  }
 
   const handleSave = () => {
     if (category && count > 0n && initialCode && finalCode) {
@@ -159,61 +168,20 @@ export default function Home() {
     setIsFetchingAgency(false);
   };
 
-  const handleGenerateAndSaveReport = async () => {
-    if (!agencyName || !reportDate || grandTotal === 0n || !firestore) {
-      toast({
-        title: "Nada para Salvar",
-        description: "Não há dados de contagem para salvar.",
-        variant: "destructive",
-      });
-      return;
-    }
-  
-    // Convert BigInts to strings for Firestore
-    const countsAsString = Object.entries(savedCounts).reduce((acc, [key, value]) => {
-      acc[key] = value.toString();
-      return acc;
-    }, {} as Record<string, string>);
-  
-    try {
-      const reportsRef = collection(firestore, "reports");
-      await addDoc(reportsRef, {
-        agencyNumber,
-        agencyName,
-        reportDate: reportDate,
-        savedCounts: countsAsString,
-        sequencePairs: sequencePairs,
-        grandTotal: grandTotal.toString(),
-        createdAt: serverTimestamp(),
-      });
-  
-      toast({
-        title: "Relatório Salvo e Sessão Finalizada!",
-        description: "O relatório foi salvo no banco de dados e a sessão foi limpa.",
-      });
-  
-    } catch (error) {
-      console.error("Error saving report: ", error);
-      toast({
-        title: "Erro ao Salvar Relatório",
-        description: "Não foi possível salvar o relatório no banco de dados.",
-        variant: "destructive",
-      });
-    }
-  
-    // Clear current report data after saving
-    setSavedCounts({});
-    setSequencePairs({});
-    setAgencyNumber("");
-    setAgencyName(null);
-    setReportDate(null);
-  };
-  
-  const handleShare = async () => {
+  const handleShareAndFinalize = async () => {
     if (!reportRef.current) {
       toast({
         title: "Erro",
         description: "Não foi possível capturar o relatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!agencyName || !reportDate || grandTotal === 0n || !firestore) {
+      toast({
+        title: "Nada para Salvar",
+        description: "Não há dados de contagem para salvar.",
         variant: "destructive",
       });
       return;
@@ -277,6 +245,41 @@ export default function Home() {
         description: "Não foi possível compartilhar a imagem do relatório.",
         variant: "destructive",
       });
+    } finally {
+        
+        // Convert BigInts to strings for Firestore
+        const countsAsString = Object.entries(savedCounts).reduce((acc, [key, value]) => {
+          acc[key] = value.toString();
+          return acc;
+        }, {} as Record<string, string>);
+      
+        try {
+          const reportsRef = collection(firestore, "reports");
+          await addDoc(reportsRef, {
+            agencyNumber,
+            agencyName,
+            reportDate: reportDate,
+            savedCounts: countsAsString,
+            sequencePairs: sequencePairs,
+            grandTotal: grandTotal.toString(),
+            createdAt: serverTimestamp(),
+          });
+      
+          toast({
+            title: "Relatório Salvo e Sessão Finalizada!",
+            description: "O relatório foi salvo no banco de dados e a sessão foi limpa.",
+          });
+      
+        } catch (error) {
+          console.error("Error saving report: ", error);
+          toast({
+            title: "Erro ao Salvar Relatório",
+            description: "Não foi possível salvar o relatório no banco de dados.",
+            variant: "destructive",
+          });
+        }
+      
+        clearSession();
     }
   };
   
@@ -538,13 +541,10 @@ export default function Home() {
                         </div>
                     </CardContent>
                     </Card>
-                    <div className="flex gap-3">
-                      <Button onClick={handleShare} className="w-full" size="lg" variant="secondary">
-                        <Share2 className="mr-2 h-5 w-5" /> Compartilhar
-                      </Button>
-                      <Button onClick={handleGenerateAndSaveReport} className="w-full" size="lg" variant="default">
-                        <Save className="mr-2 h-5 w-5" /> Salvar e Finalizar
-                      </Button>
+                    <div className="flex justify-center">
+                        <Button onClick={handleShareAndFinalize} className="w-full" size="lg" variant="default">
+                            <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
+                        </Button>
                     </div>
                 </div>
             )}
@@ -584,3 +584,4 @@ export default function Home() {
     </main>
   );
 }
+    
