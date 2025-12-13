@@ -221,6 +221,7 @@ export default function Home() {
     }
     
     try {
+      // Temporarily set background to white for capture
       reportRef.current.style.backgroundColor = 'white';
       reportRef.current.style.color = 'black';
 
@@ -229,6 +230,7 @@ export default function Home() {
         scale: 1, 
       });
       
+      // Revert styles
       reportRef.current.style.backgroundColor = '';
       reportRef.current.style.color = '';
 
@@ -252,10 +254,7 @@ export default function Home() {
           });
         } catch (shareError) {
            console.log("Compartilhamento cancelado ou falhou", shareError);
-           toast({
-              title: "Ação de Compartilhamento Interrompida",
-              description: "Você pode tentar compartilhar novamente.",
-           });
+           // Do not show a toast on purpose if user cancels share
         }
       } else {
         pdf.save('relatorio-estoque.pdf');
@@ -296,7 +295,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background">
       <div className="w-full max-w-5xl space-y-4">
         <header className="text-center py-4 relative">
-          <h1 className="text-4xl font-bold tracking-tight text-primary">
+          <h1 className="text-5xl font-bold tracking-tight text-primary">
             countSKP
           </h1>
           <div className="absolute top-0 right-0">
@@ -473,20 +472,20 @@ export default function Home() {
             {agencyName && reportDate && (
                 <div className="space-y-4">
                     <Card ref={reportRef} className="shadow-xl border-primary/20 bg-card text-card-foreground">
-                    <CardHeader className="bg-primary/5 p-4 pt-4">
+                    <CardHeader className="bg-primary/5 p-4">
                         <CardTitle className="flex items-center gap-2 text-xl text-primary">
                         <FileText className="h-6 w-6" />
                         Relatório de Contagem
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2 p-4">
+                    <CardContent className="space-y-1 p-4">
                         <div className="space-y-1 text-sm">
                         <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
                         <p><span className="font-semibold">Data:</span> {reportDate}</p>
                         </div>
                         <Separator />
                         <div>
-                        <h4 className="font-semibold mb-2 text-base">Totais por Categoria:</h4>
+                        <h4 className="font-semibold my-2 text-base">Totais por Categoria:</h4>
                         <div className="space-y-2">
                             {ALL_CATEGORIES.map((cat) => (
                             <div key={cat} className="flex justify-between items-center bg-muted p-2.5 rounded-md">
