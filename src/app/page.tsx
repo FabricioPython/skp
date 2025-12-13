@@ -480,7 +480,7 @@ export default function Home() {
 
             {agencyName && reportDate && (
               <div className="space-y-4">
-                <Card ref={reportRef} className="shadow-xl bg-white text-[#14213d]">
+                <Card ref={reportRef} className="shadow-xl bg-white text-[#14213d] mt-4">
                   <CardHeader className="bg-white p-4">
                     <CardTitle className="flex items-center gap-2 text-xl text-[#14213d]">
                       <FileText className="h-6 w-6" />
