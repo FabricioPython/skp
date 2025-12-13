@@ -327,12 +327,12 @@ export default function Home() {
                     Código de Barras Inicial
                   </Label>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border">
-                      <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
+                    <div className="flex-1 flex items-center justify-center h-16 bg-card rounded-lg px-3 border">
+                      <p className="text-lg font-mono tracking-wider text-card-foreground break-all text-center">
                         {initialCode || "..."}
                       </p>
                     </div>
-                    <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0" onClick={() => setScanningFor("initial")}>
+                    <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0 bg-card" onClick={() => setScanningFor("initial")}>
                       <Camera className="h-6 w-6" />
                     </Button>
                   </div>
@@ -342,12 +342,12 @@ export default function Home() {
                     Código de Barras Final
                   </Label>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center justify-center h-16 bg-muted rounded-lg px-3 border">
-                      <p className="text-lg font-mono tracking-wider text-foreground break-all text-center">
+                    <div className="flex-1 flex items-center justify-center h-16 bg-card rounded-lg px-3 border">
+                      <p className="text-lg font-mono tracking-wider text-card-foreground break-all text-center">
                         {finalCode || "..."}
                       </p>
                     </div>
-                    <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0" onClick={() => setScanningFor("final")} disabled={!initialCode}>
+                    <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0 bg-card" onClick={() => setScanningFor("final")} disabled={!initialCode}>
                       <Camera className="h-6 w-6" />
                     </Button>
                   </div>
@@ -420,7 +420,7 @@ export default function Home() {
                     <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-lg">
                       <span className="font-medium text-lg">Tipo {cat.toUpperCase()}</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-2xl tracking-tight">{(savedCounts[cat] || 0n).toString()}</span>
+                        <span className="font-bold text-2xl tracking-tight text-foreground">{(savedCounts[cat] || 0n).toString()}</span>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-green-600" onClick={() => handleIncrementClick(cat)}>
                           <PlusCircle className="h-5 w-5" />
                         </Button>
@@ -490,12 +490,12 @@ export default function Home() {
                             {ALL_CATEGORIES.map((cat) => (
                             <div key={cat} className="flex justify-between items-center bg-muted p-2.5 rounded-md">
                                 <span className="font-medium">Tipo {cat.toUpperCase()}</span>
-                                <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
+                                <span className="font-bold text-lg text-foreground">{(savedCounts[cat] || 0n).toString()}</span>
                             </div>
                             ))}
                             <div className="flex justify-between items-center bg-muted p-2.5 rounded-md">
                             <span className="font-medium">Tipo AB</span>
-                            <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
+                            <span className="font-bold text-lg text-foreground">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
                             </div>
                         </div>
                         </div>
