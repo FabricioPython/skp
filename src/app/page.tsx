@@ -375,8 +375,8 @@ export default function Home() {
                 <CardTitle>Resultado da Contagem</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="bg-primary/10 border-2 border-primary/20 border-dashed text-primary rounded-xl p-2">
-                  <p className="text-center text-6xl font-bold tracking-tighter">{count.toString()}</p>
+                <div className="bg-primary/10 border-2 border-primary/20 rounded-xl p-2">
+                  <p className="text-center text-6xl font-bold tracking-tighter text-primary">{count.toString()}</p>
                 </div>
                 <div>
                   <Label className="mb-2 block text-center text-sm">Selecione a Categoria para Salvar</Label>
@@ -416,10 +416,10 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                    {ALL_CATEGORIES.map((cat) => (
-                    <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-lg">
-                      <span className="font-medium text-lg">{cat.toUpperCase()}</span>
+                    <div key={cat} className="flex justify-between items-center bg-card border p-3 rounded-lg">
+                      <span className="font-medium text-lg text-card-foreground">{cat.toUpperCase()}</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-2xl tracking-tight text-foreground">{(savedCounts[cat] || 0n).toString()}</span>
+                        <span className="font-bold text-2xl tracking-tight text-card-foreground">{(savedCounts[cat] || 0n).toString()}</span>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-green-600" onClick={() => handleIncrementClick(cat)}>
                           <PlusCircle className="h-5 w-5" />
                         </Button>
@@ -471,13 +471,13 @@ export default function Home() {
             {agencyName && reportDate && (
                 <div className="space-y-4">
                     <Card ref={reportRef} className="shadow-xl border-primary/20 bg-card text-card-foreground">
-                    <CardHeader className="bg-primary/5 p-4">
+                    <CardHeader className="bg-card p-4 pb-2">
                         <CardTitle className="flex items-center gap-2 text-xl text-primary">
                         <FileText className="h-6 w-6" />
                         Relatório de Contagem
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-1 p-4">
+                    <CardContent className="space-y-2 p-4">
                         <div className="space-y-1 text-sm">
                         <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
                         <p><span className="font-semibold">Data:</span> {reportDate}</p>
@@ -487,14 +487,14 @@ export default function Home() {
                         <h4 className="font-semibold my-2 text-base">Totais por Categoria:</h4>
                         <div className="space-y-2">
                             {ALL_CATEGORIES.map((cat) => (
-                            <div key={cat} className="flex justify-between items-center bg-muted p-2.5 rounded-md">
-                                <span className="font-medium">{cat.toUpperCase()}</span>
-                                <span className="font-bold text-lg text-foreground">{(savedCounts[cat] || 0n).toString()}</span>
+                            <div key={cat} className="flex justify-between items-center bg-card border p-2.5 rounded-md">
+                                <span className="font-medium text-card-foreground">{cat.toUpperCase()}</span>
+                                <span className="font-bold text-lg text-card-foreground">{(savedCounts[cat] || 0n).toString()}</span>
                             </div>
                             ))}
-                            <div className="flex justify-between items-center bg-muted p-2.5 rounded-md">
-                            <span className="font-medium">Tipo AB</span>
-                            <span className="font-bold text-lg text-foreground">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
+                            <div className="flex justify-between items-center bg-card border p-2.5 rounded-md">
+                            <span className="font-medium text-card-foreground">Tipo AB</span>
+                            <span className="font-bold text-lg text-card-foreground">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
                             </div>
                         </div>
                         </div>
