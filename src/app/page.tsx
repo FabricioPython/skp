@@ -3,7 +3,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Camera, RefreshCcw, Calculator, Save, Archive, Search, FileText, Share2, PlusCircle, History } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, Share2, PlusCircle, History, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -194,7 +194,7 @@ export default function Home() {
 
       const canvas = await html2canvas(reportRef.current, {
         useCORS: true,
-        scale: 1.5,
+        scale: 3,
       });
 
       // Revert styles
