@@ -376,7 +376,6 @@ export default function Home() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="bg-primary/10 border-2 border-primary/20 border-dashed text-primary rounded-xl p-2">
-                  <p className="text-center text-sm">Total de Itens</p>
                   <p className="text-center text-6xl font-bold tracking-tighter">{count.toString()}</p>
                 </div>
                 <div>
