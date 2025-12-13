@@ -38,7 +38,6 @@ import { Input } from "@/components/ui/input";
 import { agencies } from "@/lib/agencies";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import { useFirebase } from "@/firebase/provider";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
@@ -219,7 +218,7 @@ export default function Home() {
       });
       return;
     }
-    
+
     try {
       // Temporarily set background to white for capture
       reportRef.current.style.backgroundColor = 'white';
@@ -227,47 +226,55 @@ export default function Home() {
 
       const canvas = await html2canvas(reportRef.current, {
         useCORS: true,
-        scale: 1, 
+        scale: 1.5,
       });
-      
+
       // Revert styles
       reportRef.current.style.backgroundColor = '';
       reportRef.current.style.color = '';
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'pt',
-        format: [canvas.width, canvas.height]
-      });
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      const pdfBlob = pdf.output('blob');
-      
-      const file = new File([pdfBlob], "relatorio-estoque.pdf", { type: "application/pdf" });
-      
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-           await navigator.share({
-            files: [file],
-            title: 'Relatório de Contagem de Estoque',
-            text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${reportDate}.`,
-          });
-        } catch (shareError) {
-           console.log("Compartilhamento cancelado ou falhou", shareError);
-           // Do not show a toast on purpose if user cancels share
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+            toast({
+                title: "Erro ao gerar imagem",
+                description: "Não foi possível criar o arquivo de imagem.",
+                variant: "destructive",
+            });
+            return;
         }
-      } else {
-        pdf.save('relatorio-estoque.pdf');
-        toast({
-          title: "PDF Salvo",
-          description: "Relatório em PDF baixado. Você pode compartilhá-lo manualmente.",
-        });
-      }
+
+        const file = new File([blob], "relatorio-estoque.png", { type: "image/png" });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'Relatório de Contagem de Estoque',
+              text: `Aqui está o relatório de contagem para ${agencyName} em ${reportDate}.`,
+            });
+          } catch (shareError) {
+            console.log("Compartilhamento cancelado ou falhou", shareError);
+            // Do not show a toast if user cancels
+          }
+        } else {
+            // Fallback for browsers that don't support sharing files
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'relatorio-estoque.png';
+            link.click();
+            URL.revokeObjectURL(link.href);
+            toast({
+                title: "Imagem Salva",
+                description: "O relatório foi baixado como uma imagem PNG.",
+            });
+        }
+      }, 'image/png');
+
     } catch (error) {
       console.error("Falha no compartilhamento:", error);
       toast({
         title: "Falha no Compartilhamento",
-        description: "Não foi possível compartilhar o relatório. Por favor, tente novamente.",
+        description: "Não foi possível compartilhar a imagem do relatório.",
         variant: "destructive",
       });
     }
