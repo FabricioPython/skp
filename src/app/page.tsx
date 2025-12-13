@@ -235,7 +235,7 @@ export default function Home() {
 
       const canvas = await html2canvas(reportRef.current, {
         useCORS: true,
-        scale: 1, // Increase resolution
+        scale: 1, // Keep scale at 1 for smaller image
       });
       
       // Revert background and text color
@@ -495,7 +495,7 @@ export default function Home() {
             {agencyName && reportDate && (
                 <div className="space-y-4">
                     <Card ref={reportRef} className="shadow-xl border-primary/20 bg-card text-card-foreground">
-                    <CardHeader className="bg-primary/5">
+                    <CardHeader className="bg-primary/5 p-4 pt-4">
                         <CardTitle className="flex items-center gap-2 text-xl text-primary">
                         <FileText className="h-6 w-6" />
                         Relatório de Contagem
@@ -504,7 +504,7 @@ export default function Home() {
                         Resumo de contagem de caixas.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4 p-6">
+                    <CardContent className="space-y-2 p-4">
                         <div className="space-y-1 text-sm">
                         <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
                         <p><span className="font-semibold">Data:</span> {reportDate}</p>
@@ -514,12 +514,12 @@ export default function Home() {
                         <h4 className="font-semibold mb-2 text-base">Totais por Categoria:</h4>
                         <div className="space-y-2">
                             {ALL_CATEGORIES.map((cat) => (
-                            <div key={cat} className="flex justify-between items-center bg-muted p-3 rounded-md">
+                            <div key={cat} className="flex justify-between items-center bg-muted p-2.5 rounded-md">
                                 <span className="font-medium">Tipo {cat.toUpperCase()}</span>
                                 <span className="font-bold text-lg">{(savedCounts[cat] || 0n).toString()}</span>
                             </div>
                             ))}
-                            <div className="flex justify-between items-center bg-muted p-3 rounded-md">
+                            <div className="flex justify-between items-center bg-muted p-2.5 rounded-md">
                             <span className="font-medium">Tipo AB</span>
                             <span className="font-bold text-lg">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
                             </div>
@@ -529,8 +529,8 @@ export default function Home() {
                         <>
                             <Separator />
                             <div>
-                            <h4 className="font-semibold mb-2 text-base">Sequências Lidas:</h4>
-                            <div className="space-y-3 text-xs font-mono">
+                            <h4 className="font-semibold my-2 text-base">Sequências Lidas:</h4>
+                            <div className="space-y-2 text-xs font-mono">
                                 {ALL_CATEGORIES.map(cat => (
                                 sequencePairs[cat] && sequencePairs[cat].length > 0 && (
                                     <div key={cat}>
@@ -552,7 +552,7 @@ export default function Home() {
                         </>
                         )}
                         <Separator />
-                        <div className="flex justify-between items-center p-4 rounded-lg bg-primary text-primary-foreground">
+                        <div className="flex justify-between items-center p-3 mt-2 rounded-lg bg-primary text-primary-foreground">
                         <span className="font-bold text-lg">Total Geral</span>
                         <span className="font-extrabold text-2xl tracking-tight">{grandTotal.toString()}</span>
                         </div>
