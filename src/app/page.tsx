@@ -38,6 +38,7 @@ import { Input } from "@/components/ui/input";
 import { agencies } from "@/lib/agencies";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { useFirebase } from "@/firebase/provider";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
@@ -220,72 +221,61 @@ export default function Home() {
     }
     const shareDate = new Date().toLocaleDateString('pt-BR');
     if (!shareDate) {
-        toast({
-            title: "Erro",
-            description: "Não foi possível obter a data atual.",
-            variant: "destructive",
-        });
-        return;
+      toast({
+        title: "Erro",
+        description: "Não foi possível obter a data atual.",
+        variant: "destructive",
+      });
+      return;
     }
 
     try {
-      // Temporarily set background to white for capture
       reportRef.current.style.backgroundColor = 'white';
-      reportRef.current.style.color = 'black'; // Ensure text is visible
+      reportRef.current.style.color = 'black';
 
       const canvas = await html2canvas(reportRef.current, {
         useCORS: true,
-        scale: 1, // Keep scale at 1 for smaller image
+        scale: 1, 
       });
       
-      // Revert background and text color
       reportRef.current.style.backgroundColor = '';
       reportRef.current.style.color = '';
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          toast({
-            title: "Erro",
-            description: "Falha ao criar imagem do relatório.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        const file = new File([blob], "relatorio-estoque.png", { type: "image/png" });
-        
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-             await navigator.share({
-              files: [file],
-              title: 'Relatório de Contagem de Estoque',
-              text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${shareDate}.`,
-            });
-            await handleGenerateAndSaveReport(shareDate);
-          } catch (shareError) {
-             console.log("Compartilhamento cancelado ou falhou", shareError);
-             toast({
-                title: "Ação de Compartilhamento Interrompida",
-                description: "Salvando o relatório e finalizando a sessão mesmo assim.",
-             });
-             // Even if sharing fails, we save the report and clear the session
-             await handleGenerateAndSaveReport(shareDate);
-          }
-        } else {
-          // Fallback for desktop or browsers that don't support sharing files
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(file);
-          link.download = 'relatorio-estoque.png';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          toast({
-            title: "Imagem Salva",
-            description: "Imagem do relatório baixada. Você pode compartilhá-la manualmente.",
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: [canvas.width, canvas.height]
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      const pdfBlob = pdf.output('blob');
+      
+      const file = new File([pdfBlob], "relatorio-estoque.pdf", { type: "application/pdf" });
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+           await navigator.share({
+            files: [file],
+            title: 'Relatório de Contagem de Estoque',
+            text: `Aqui está o relatório de contagem de caixas para ${agencyName} em ${shareDate}.`,
           });
           await handleGenerateAndSaveReport(shareDate);
+        } catch (shareError) {
+           console.log("Compartilhamento cancelado ou falhou", shareError);
+           toast({
+              title: "Ação de Compartilhamento Interrompida",
+              description: "Salvando o relatório e finalizando a sessão mesmo assim.",
+           });
+           await handleGenerateAndSaveReport(shareDate);
         }
-      }, 'image/png');
+      } else {
+        pdf.save('relatorio-estoque.pdf');
+        toast({
+          title: "PDF Salvo",
+          description: "Relatório em PDF baixado. Você pode compartilhá-lo manualmente.",
+        });
+        await handleGenerateAndSaveReport(shareDate);
+      }
     } catch (error) {
       console.error("Falha no compartilhamento:", error);
       toast({
@@ -315,10 +305,10 @@ export default function Home() {
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-secondary">
+    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background">
       <div className="w-full max-w-5xl space-y-4">
         <header className="text-center py-4 relative">
-          <h1 className="text-3xl font-bold tracking-tight text-primary">
+          <h1 className="text-4xl font-bold tracking-tight text-primary">
             countSKP
           </h1>
           <div className="absolute top-0 right-0">
@@ -500,9 +490,6 @@ export default function Home() {
                         <FileText className="h-6 w-6" />
                         Relatório de Contagem
                         </CardTitle>
-                        <CardDescription>
-                        Resumo de contagem de caixas.
-                        </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2 p-4">
                         <div className="space-y-1 text-sm">
