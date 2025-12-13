@@ -479,74 +479,74 @@ export default function Home() {
             )}
 
             {agencyName && reportDate && (
-                <div className="space-y-4">
-                    <Card ref={reportRef} className="shadow-xl border-primary/20 bg-card text-card-foreground">
-                    <CardHeader className="bg-card p-4 pb-2">
-                        <CardTitle className="flex items-center gap-2 text-xl text-primary">
-                        <FileText className="h-6 w-6" />
-                        Relatório de Contagem
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 p-4">
-                        <div className="space-y-1 text-sm">
-                        <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
-                        <p><span className="font-semibold">Data:</span> {reportDate}</p>
-                        </div>
-                        <Separator />
-                        <div>
-                        <h4 className="font-semibold my-2 text-base">Totais por Categoria:</h4>
-                        <div className="space-y-2">
-                            {ALL_CATEGORIES.map((cat) => (
-                            <div key={cat} className="flex justify-between items-center bg-card border p-2.5 rounded-md">
-                                <span className="font-medium text-card-foreground">{cat.toUpperCase()}</span>
-                                <span className="font-bold text-lg text-card-foreground">{(savedCounts[cat] || 0n).toString()}</span>
-                            </div>
-                            ))}
-                            <div className="flex justify-between items-center bg-card border p-2.5 rounded-md">
-                            <span className="font-medium text-card-foreground">Tipo AB</span>
-                            <span className="font-bold text-lg text-card-foreground">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
-                            </div>
-                        </div>
-                        </div>
-                        {Object.keys(sequencePairs).length > 0 && (
-                        <>
-                            <Separator />
-                            <div>
-                            <h4 className="font-semibold my-2 text-base">Sequências Lidas:</h4>
-                            <div className="space-y-2 text-xs font-mono">
-                                {ALL_CATEGORIES.map(cat => (
-                                sequencePairs[cat] && sequencePairs[cat].length > 0 && (
-                                    <div key={cat}>
-                                    <p className="font-semibold mb-1 text-sm">{cat.toUpperCase()}:</p>
-                                    <div className="space-y-1 pl-2 border-l-2">
-                                        {sequencePairs[cat].map((pair, index) => (
-                                        <div key={index} className="flex justify-between">
-                                            <span>{pair.initial}</span>
-                                            <span>&rarr;</span>
-                                            <span>{pair.final}</span>
-                                        </div>
-                                        ))}
-                                    </div>
-                                    </div>
-                                )
-                                ))}
-                            </div>
-                            </div>
-                        </>
-                        )}
-                        <Separator />
-                        <div className="flex justify-between items-center p-3 mt-2 rounded-lg bg-primary text-primary-foreground">
-                        <span className="font-bold text-lg">Total Geral</span>
-                        <span className="font-extrabold text-2xl tracking-tight">{grandTotal.toString()}</span>
-                        </div>
-                    </CardContent>
-                    </Card>
-                    <div className="flex justify-center">
-                        <Button onClick={handleShareAndFinalize} className="w-full" size="lg" variant="default">
-                            <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
-                        </Button>
+              <div className="space-y-4">
+                <Card ref={reportRef} className="shadow-xl bg-white text-[#14213d]">
+                  <CardHeader className="bg-white p-4">
+                    <CardTitle className="flex items-center gap-2 text-xl text-[#14213d]">
+                      <FileText className="h-6 w-6" />
+                      Relatório de Contagem
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 p-4">
+                    <div className="space-y-1 text-sm">
+                      <p><span className="font-semibold">Agência:</span> {agencyName} ({agencyNumber})</p>
+                      <p><span className="font-semibold">Data:</span> {reportDate}</p>
                     </div>
+                    <Separator className="bg-gray-200" />
+                    <div>
+                      <h4 className="font-semibold my-2 text-base">Totais por Categoria:</h4>
+                      <div className="space-y-2">
+                        {ALL_CATEGORIES.map((cat) => (
+                          <div key={cat} className="flex justify-between items-center bg-white border border-gray-200 p-2.5 rounded-md">
+                            <span className="font-medium text-[#14213d]">{cat.toUpperCase()}</span>
+                            <span className="font-bold text-lg text-[#14213d]">{(savedCounts[cat] || 0n).toString()}</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between items-center bg-white border border-gray-200 p-2.5 rounded-md">
+                          <span className="font-medium text-[#14213d]">Tipo AB</span>
+                          <span className="font-bold text-lg text-[#14213d]">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {Object.keys(sequencePairs).length > 0 && (
+                      <>
+                        <Separator className="bg-gray-200" />
+                        <div>
+                          <h4 className="font-semibold my-2 text-base">Sequências Lidas:</h4>
+                          <div className="space-y-2 text-xs font-mono">
+                            {ALL_CATEGORIES.map(cat => (
+                              sequencePairs[cat] && sequencePairs[cat].length > 0 && (
+                                <div key={cat}>
+                                  <p className="font-semibold mb-1 text-sm">{cat.toUpperCase()}:</p>
+                                  <div className="space-y-1 pl-2 border-l-2">
+                                    {sequencePairs[cat].map((pair, index) => (
+                                      <div key={index} className="flex justify-between">
+                                        <span>{pair.initial}</span>
+                                        <span>&rarr;</span>
+                                        <span>{pair.final}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    <Separator className="bg-gray-200" />
+                    <div className="flex justify-between items-center p-3 mt-2 rounded-lg bg-[#14213d] text-white">
+                      <span className="font-bold text-lg">Total Geral</span>
+                      <span className="font-extrabold text-2xl tracking-tight">{grandTotal.toString()}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                <div className="flex justify-center">
+                    <Button onClick={handleShareAndFinalize} className="w-full" size="lg" variant="default">
+                        <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
+                    </Button>
                 </div>
+              </div>
             )}
 
           </div>
@@ -584,4 +584,3 @@ export default function Home() {
     </main>
   );
 }
-    
