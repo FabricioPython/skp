@@ -459,7 +459,7 @@ export default function Home() {
                       value={agencyNumber}
                       onChange={(e) => setAgencyNumber(e.target.value)}
                       disabled={isFetchingAgency}
-                      className="h-12 text-lg"
+                      className="h-12 text-lg bg-card"
                     />
                     <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber} className="h-12" size="icon">
                       <Search className="h-5 w-5" />
@@ -584,3 +584,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
