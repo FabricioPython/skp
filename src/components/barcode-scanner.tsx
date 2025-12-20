@@ -40,21 +40,11 @@ export default function BarcodeScanner({
 }: BarcodeScannerProps) {
   const { toast } = useToast();
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | undefined>(undefined);
-  const [isApiSupported, setIsApiSupported] = useState<boolean>(true);
+  const [isApiSupported, setIsApiSupported] = useState<boolean | undefined>(undefined);
   const videoRef = useRef<HTMLVideoElement>(null);
   const animationFrameId = useRef<number>();
 
   useEffect(() => {
-    if (!('BarcodeDetector' in window)) {
-      setIsApiSupported(false);
-      toast({
-        title: "Navegador incompatível",
-        description: "Seu navegador não suporta a leitura de código de barras nativa.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     let stream: MediaStream;
     const getCameraPermission = async () => {
       try {
@@ -84,12 +74,18 @@ export default function BarcodeScanner({
   }, [toast]);
 
   useEffect(() => {
-    if (paused || !hasCameraPermission || !isApiSupported) {
+    if (paused || hasCameraPermission !== true) {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
       return;
     }
+
+    if (!('BarcodeDetector' in window)) {
+        setIsApiSupported(false);
+        return;
+    }
+    setIsApiSupported(true);
 
     const barcodeDetector = new window.BarcodeDetector({
       formats: supportedFormats,
@@ -120,17 +116,17 @@ export default function BarcodeScanner({
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [paused, hasCameraPermission, onScan, isApiSupported]);
+  }, [paused, hasCameraPermission, onScan]);
 
   return (
     <div>
       <video ref={videoRef} className="w-full" autoPlay playsInline muted />
-      {!isApiSupported && (
+      {isApiSupported === false && (
          <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/50">
             <Alert variant="destructive">
                 <AlertTitle>Navegador Incompatível</AlertTitle>
                 <AlertDescription>
-                    Este navegador não suporta a funcionalidade de leitura de código de barras. Tente usar o Chrome ou Safari.
+                    Este navegador não suporta a funcionalidade de leitura de código de barras. Tente usar o Chrome ou Safari mais recente.
                 </AlertDescription>
             </Alert>
         </div>
