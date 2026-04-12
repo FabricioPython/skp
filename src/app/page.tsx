@@ -70,11 +70,72 @@ export default function Home() {
   const { toast } = useToast();
   const { firestore } = useFirebase();
 
+  // Load session from localStorage on component mount
   useEffect(() => {
-    if (agencyName) {
+    try {
+      const savedSession = localStorage.getItem("stock-counter-session");
+      if (savedSession) {
+        const { savedCounts: savedCountsStr, sequencePairs: loadedSeqPairs, agencyNumber: loadedAgencyNum, agencyName: loadedAgencyName, reportDate: loadedReportDate } = JSON.parse(savedSession);
+        
+        const loadedSavedCounts: Record<string, bigint> = {};
+        if (savedCountsStr) {
+          for (const key in savedCountsStr) {
+            loadedSavedCounts[key] = BigInt(savedCountsStr[key]);
+          }
+        }
+        setSavedCounts(loadedSavedCounts);
+
+        if (loadedSeqPairs) setSequencePairs(loadedSeqPairs);
+        if (loadedAgencyNum) setAgencyNumber(loadedAgencyNum);
+        if (loadedAgencyName) setAgencyName(loadedAgencyName);
+        if (loadedReportDate) setReportDate(loadedReportDate);
+      }
+    } catch (error) {
+      console.error("Falha ao carregar a sessão do localStorage", error);
+      // Clear broken data
+      localStorage.removeItem("stock-counter-session");
+    }
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Save session to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      // Don't save if there's nothing to save (initial state)
+      if (Object.keys(savedCounts).length === 0 && !agencyNumber && !agencyName) {
+        // Also check if there is something in localStorage to remove it
+        if (localStorage.getItem("stock-counter-session")) {
+            localStorage.removeItem("stock-counter-session");
+        }
+        return;
+      }
+      
+      // Convert BigInts in savedCounts to strings for serialization
+      const savedCountsStr: Record<string, string> = {};
+      for (const key in savedCounts) {
+        savedCountsStr[key] = savedCounts[key].toString();
+      }
+
+      const sessionToSave = {
+        savedCounts: savedCountsStr,
+        sequencePairs,
+        agencyNumber,
+        agencyName,
+        reportDate,
+      };
+      
+      localStorage.setItem("stock-counter-session", JSON.stringify(sessionToSave));
+
+    } catch (error) {
+      console.error("Falha ao salvar a sessão no localStorage", error);
+    }
+  }, [savedCounts, sequencePairs, agencyNumber, agencyName, reportDate]);
+
+
+  useEffect(() => {
+    if (agencyName && !reportDate) {
       setReportDate(new Date().toLocaleDateString('pt-BR'));
     }
-  }, [agencyName]);
+  }, [agencyName, reportDate]);
   
   const handleScan = (result: string) => {
     setError(null);
@@ -128,6 +189,16 @@ export default function Home() {
       setAgencyName(null);
       setReportDate(null);
       resetAll();
+       try {
+        localStorage.removeItem("stock-counter-session");
+      } catch (error) {
+        console.error("Falha ao limpar a sessão do localStorage", error);
+        toast({
+          title: "Erro ao Limpar",
+          description: "Não foi possível apagar os dados salvos no navegador.",
+          variant: "destructive",
+        });
+      }
   }
 
   const handleSave = () => {
