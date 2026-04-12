@@ -606,7 +606,7 @@ ${sequencesText}
                         <Mail className="mr-2 h-5 w-5" /> Enviar
                     </Button>
                     <Button onClick={handleShareAndFinalize} className="w-full" size="lg" variant="default">
-                        <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
+                        <Save className="mr-2 h-5 w-5" /> Salvar
                     </Button>
                 </div>
               </div>
@@ -667,5 +667,3 @@ ${sequencesText}
     </main>
   );
 }
-
-    
