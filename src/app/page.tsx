@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, Share2, PlusCircle, Eraser, Save, Mail } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, PlusCircle, Eraser, Save, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -177,44 +177,77 @@ export default function Home() {
       });
       return;
     }
-
-    const categoriesText = ALL_CATEGORIES.map(cat => 
-      `${cat.toUpperCase()}: ${(savedCounts[cat] || 0n).toString()}`
-    ).join('\n');
+    
+    const categoriesHtml = ALL_CATEGORIES.map(cat => 
+        `<tr><td>${cat.toUpperCase()}</td><td align="center">${(savedCounts[cat] || 0n).toString()}</td></tr>`
+    ).join('');
 
     const totalAB = ((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString();
 
-    const sequencesText = ALL_CATEGORIES.map(cat => {
+    const sequencesHtml = ALL_CATEGORIES.map(cat => {
       if (sequencePairs[cat] && sequencePairs[cat].length > 0) {
-        const pairsText = sequencePairs[cat].map(pair => `  - De ${pair.initial} a ${pair.final}`).join('\n');
-        return `${cat.toUpperCase()}:\n${pairsText}`;
+        const pairsHtml = sequencePairs[cat].map(pair => `<tr><td align="center">${pair.initial}</td><td align="center">&rarr;</td><td align="center">${pair.final}</td></tr>`).join('');
+        return `
+          <h4>Categoria ${cat.toUpperCase()}</h4>
+          <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+              <tr>
+                <th>Inicial</th>
+                <th></th>
+                <th>Final</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pairsHtml}
+            </tbody>
+          </table>
+        `;
       }
-      return null;
-    }).filter(Boolean).join('\n\n');
+      return '';
+    }).filter(Boolean).join('<br>');
 
-    const emailBodyText = `Relatório de Contagem de Estoque
-=================================
-Agência: ${agencyName} (${agencyNumber})
-Data: ${reportDate}
-=================================
-
-TOTAIS POR CATEGORIA
----------------------------------
-${categoriesText}
-Tipo AB: ${totalAB}
----------------------------------
-TOTAL GERAL: ${grandTotal.toString()}
-=================================
-${sequencesText ? `
-
-SEQUÊNCIAS LIDAS
----------------------------------
-${sequencesText}
-` : ''}
-    `.trim();
+    const emailBodyHtml = `
+      <html>
+        <body>
+          <h3>Relatório de Contagem de Estoque</h3>
+          <p><b>Agência:</b> ${agencyName} (${agencyNumber})</p>
+          <p><b>Data:</b> ${reportDate}</p>
+          <hr>
+          <h4>Totais por Categoria</h4>
+          <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Categoria</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+              ${categoriesHtml}
+              <tr>
+                <td><b>Tipo AB</b></td>
+                <td align="center"><b>${totalAB}</b></td>
+              </tr>
+            </tbody>
+          </table>
+          <br>
+          <table border="1" cellpadding="5" cellspacing="0">
+             <tbody>
+              <tr>
+                <td><b>Total Geral</b></td>
+                <td align="center"><b>${grandTotal.toString()}</b></td>
+              </tr>
+             </tbody>
+          </table>
+          ${sequencesHtml ? `<hr><h4>Sequências Lidas</h4>${sequencesHtml}` : ''}
+        </body>
+      </html>
+    `;
 
     const subject = `Relatório de Contagem de Estoque - ${agencyName} - ${reportDate}`;
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBodyText)}`;
+    // Remove extra whitespace and newlines from HTML before encoding
+    const cleanedHtml = emailBodyHtml.replace(/\n/g, "").replace(/\s\s+/g, " ");
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(cleanedHtml)}`;
+
 
     window.location.href = mailtoLink;
     
@@ -667,3 +700,4 @@ ${sequencesText}
     </main>
   );
 }
+
