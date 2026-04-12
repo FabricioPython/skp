@@ -603,7 +603,7 @@ ${sequencesText}
                 </Card>
                 <div className="flex justify-center gap-4">
                     <Button onClick={handleSendEmail} className="w-full" size="lg" variant="outline">
-                        <Mail className="mr-2 h-5 w-5" /> Enviar Email
+                        <Mail className="mr-2 h-5 w-5" /> Enviar
                     </Button>
                     <Button onClick={handleShareAndFinalize} className="w-full" size="lg" variant="default">
                         <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
@@ -667,3 +667,5 @@ ${sequencesText}
     </main>
   );
 }
+
+    
