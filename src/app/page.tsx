@@ -3,7 +3,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, Share2, PlusCircle, History, Save } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, Share2, PlusCircle, History, Save, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -167,6 +167,95 @@ export default function Home() {
     
     setIsFetchingAgency(false);
   };
+  
+  const handleSendEmail = () => {
+    if (!agencyName || !reportDate || grandTotal === 0n) {
+      toast({
+        title: "Nada para Enviar",
+        description: "Não há dados de contagem para enviar por e-mail.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const categoriesHtml = ALL_CATEGORIES.map(cat => `
+      <tr>
+        <td style="padding: 5px; text-align: center; border: 1px solid #ddd;">${cat.toUpperCase()}</td>
+        <td style="padding: 5px; text-align: center; border: 1px solid #ddd;">${(savedCounts[cat] || 0n).toString()}</td>
+      </tr>
+    `).join('');
+
+    const totalAB = ((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString();
+
+    const sequencesHtml = ALL_CATEGORIES.map(cat => {
+      if (sequencePairs[cat] && sequencePairs[cat].length > 0) {
+        return sequencePairs[cat].map(pair => `
+          <tr>
+            <td style="padding: 5px; border: 1px solid #ddd;">${cat.toUpperCase()}</td>
+            <td style="padding: 5px; border: 1px solid #ddd;">${pair.initial}</td>
+            <td style="padding: 5px; border: 1px solid #ddd;">${pair.final}</td>
+          </tr>
+        `).join('');
+      }
+      return '';
+    }).join('');
+
+    const emailBodyHtml = `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <h3>Relatório de Contagem de Estoque</h3>
+        <p><strong>Agência:</strong> ${agencyName} (${agencyNumber})</p>
+        <p><strong>Data:</strong> ${reportDate}</p>
+        <hr>
+        <h4>Totais por Categoria:</h4>
+        <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd;">
+          <thead style="background-color: #f2f2f2;">
+            <tr>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Categoria</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${categoriesHtml}
+            <tr>
+              <td style="padding: 5px; text-align: center; border: 1px solid #ddd;">Tipo AB</td>
+              <td style="padding: 5px; text-align: center; border: 1px solid #ddd;">${totalAB}</td>
+            </tr>
+            <tr style="background-color: #f2f2f2;">
+              <td style="padding: 5px; text-align: center; border: 1px solid #ddd;"><strong>Total Geral</strong></td>
+              <td style="padding: 5px; text-align: center; border: 1px solid #ddd;"><strong>${grandTotal.toString()}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <br>
+        ${sequencesHtml ? `
+        <h4>Sequências Lidas:</h4>
+        <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd;">
+          <thead style="background-color: #f2f2f2;">
+            <tr>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Categoria</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Inicial</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Final</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sequencesHtml}
+          </tbody>
+        </table>
+        ` : ''}
+      </div>
+    `;
+
+    const subject = `Relatório de Contagem de Estoque - ${agencyName} - ${reportDate}`;
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBodyHtml)}`;
+
+    window.location.href = mailtoLink;
+    
+    toast({
+        title: "Abrindo cliente de e-mail",
+        description: "Prepare o e-mail para envio.",
+    });
+  };
+
 
   const handleShareAndFinalize = async () => {
     if (!reportRef.current) {
@@ -541,7 +630,10 @@ export default function Home() {
                     </div>
                   </CardContent>
                 </Card>
-                <div className="flex justify-center">
+                <div className="flex justify-center gap-4">
+                    <Button onClick={handleSendEmail} className="w-full" size="lg" variant="outline">
+                        <Mail className="mr-2 h-5 w-5" /> Enviar Email
+                    </Button>
                     <Button onClick={handleShareAndFinalize} className="w-full" size="lg" variant="default">
                         <Share2 className="mr-2 h-5 w-5" /> Compartilhar e Finalizar
                     </Button>
