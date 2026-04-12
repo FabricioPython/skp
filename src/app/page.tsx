@@ -2,8 +2,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import Link from "next/link";
-import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, Share2, PlusCircle, History, Save, Mail } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, Share2, PlusCircle, Eraser, Save, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -64,6 +63,7 @@ export default function Home() {
   
   const [isIncrementAlertOpen, setIsIncrementAlertOpen] = useState(false);
   const [categoryToIncrement, setCategoryToIncrement] = useState<string | null>(null);
+  const [isClearAlertOpen, setIsClearAlertOpen] = useState(false);
 
   const reportRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -388,6 +388,11 @@ export default function Home() {
     setIsIncrementAlertOpen(false);
   };
 
+  const handleConfirmClear = () => {
+    clearSession();
+    setIsClearAlertOpen(false);
+  };
+
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
   return (
@@ -398,12 +403,10 @@ export default function Home() {
             countSKP
           </h1>
           <div className="absolute top-0 right-0">
-             <Link href="/reports" passHref>
-                <Button variant="outline" size="icon">
-                  <History className="h-5 w-5" />
-                  <span className="sr-only">Ver Relatórios Salvos</span>
-                </Button>
-              </Link>
+             <Button variant="outline" size="icon" onClick={() => setIsClearAlertOpen(true)}>
+                <Eraser className="h-5 w-5" />
+                <span className="sr-only">Limpar Sessão</span>
+              </Button>
           </div>
         </header>
 
@@ -673,8 +676,26 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Limpeza</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem certeza que deseja limpar todos os dados da sessão? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmClear}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Limpar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
-
-    
