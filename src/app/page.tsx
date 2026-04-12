@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { agencies } from "@/lib/agencies";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import { useFirebase } from "@/firebase/provider";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
@@ -168,93 +169,85 @@ export default function Home() {
     setIsFetchingAgency(false);
   };
   
-  const handleSendEmail = () => {
-    if (!agencyName || !reportDate || grandTotal === 0n) {
+  const handleSendEmail = async () => {
+    if (!reportRef.current) {
       toast({
-        title: "Nada para Enviar",
-        description: "Não há dados de contagem para enviar por e-mail.",
+        title: "Erro",
+        description: "Não foi possível capturar o relatório.",
         variant: "destructive",
       });
       return;
     }
     
-    const categoriesHtml = ALL_CATEGORIES.map(cat => 
-        `<tr><td>${cat.toUpperCase()}</td><td align="center">${(savedCounts[cat] || 0n).toString()}</td></tr>`
-    ).join('');
+    if (!agencyName || !reportDate || grandTotal === 0n) {
+      toast({
+        title: "Nada para Enviar",
+        description: "Não há dados de contagem para enviar.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const totalAB = ((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString();
+    try {
+      // Temporarily set background to white for capture
+      reportRef.current.style.backgroundColor = 'white';
+      reportRef.current.style.color = 'black';
 
-    const sequencesHtml = ALL_CATEGORIES.map(cat => {
-      if (sequencePairs[cat] && sequencePairs[cat].length > 0) {
-        const pairsHtml = sequencePairs[cat].map(pair => `<tr><td align="center">${pair.initial}</td><td align="center">&rarr;</td><td align="center">${pair.final}</td></tr>`).join('');
-        return `
-          <h4>Categoria ${cat.toUpperCase()}</h4>
-          <table border="1" cellpadding="5" cellspacing="0">
-            <thead>
-              <tr>
-                <th>Inicial</th>
-                <th></th>
-                <th>Final</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${pairsHtml}
-            </tbody>
-          </table>
-        `;
-      }
-      return '';
-    }).filter(Boolean).join('<br>');
+      const canvas = await html2canvas(reportRef.current, {
+        useCORS: true,
+        scale: 2, // a good balance for quality and size
+      });
 
-    const emailBodyHtml = `
-      <html>
-        <body>
-          <h3>Relatório de Contagem de Estoque</h3>
-          <p><b>Agência:</b> ${agencyName} (${agencyNumber})</p>
-          <p><b>Data:</b> ${reportDate}</p>
-          <hr>
-          <h4>Totais por Categoria</h4>
-          <table border="1" cellpadding="5" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Categoria</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-              ${categoriesHtml}
-              <tr>
-                <td><b>Tipo AB</b></td>
-                <td align="center"><b>${totalAB}</b></td>
-              </tr>
-            </tbody>
-          </table>
-          <br>
-          <table border="1" cellpadding="5" cellspacing="0">
-             <tbody>
-              <tr>
-                <td><b>Total Geral</b></td>
-                <td align="center"><b>${grandTotal.toString()}</b></td>
-              </tr>
-             </tbody>
-          </table>
-          ${sequencesHtml ? `<hr><h4>Sequências Lidas</h4>${sequencesHtml}` : ''}
-        </body>
-      </html>
-    `;
+      // Revert styles
+      reportRef.current.style.backgroundColor = '';
+      reportRef.current.style.color = '';
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      const pdfBlob = pdf.output('blob');
+      
+      const fileName = `Relatorio_${agencyName.replace(/, /g, '_')}_${reportDate.replace(/\//g, '-')}.pdf`;
+      const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+      const subject = `Relatório de Agencia ${agencyName}`;
 
-    const subject = `Relatório de Contagem de Estoque - ${agencyName} - ${reportDate}`;
-    // Remove extra whitespace and newlines from HTML before encoding
-    const cleanedHtml = emailBodyHtml.replace(/\n/g, "").replace(/\s\s+/g, " ");
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(cleanedHtml)}`;
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          try {
+            await navigator.share({
+              files: [pdfFile],
+              title: subject,
+              text: `Aqui está o relatório de contagem para ${agencyName} em ${reportDate}.`,
+            });
+          } catch (shareError) {
+            console.log("Compartilhamento cancelado ou falhou", shareError);
+            // Do not show a toast if user cancels
+          }
+        } else {
+            // Fallback for browsers that don't support sharing files
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdfBlob);
+            link.download = fileName;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            toast({
+                title: "PDF Salvo",
+                description: "O relatório foi baixado como um arquivo PDF.",
+            });
+        }
 
-
-    window.location.href = mailtoLink;
-    
-    toast({
-        title: "Abrindo cliente de e-mail",
-        description: "Prepare o e-mail para envio.",
-    });
+    } catch (error) {
+      console.error("Falha na geração do PDF:", error);
+      toast({
+        title: "Falha na Geração do PDF",
+        description: "Não foi possível criar o arquivo PDF.",
+        variant: "destructive",
+      });
+    }
   };
 
 
@@ -700,4 +693,3 @@ export default function Home() {
     </main>
   );
 }
-
