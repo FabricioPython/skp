@@ -178,75 +178,43 @@ export default function Home() {
       return;
     }
 
-    const categoriesHtml = ALL_CATEGORIES.map(cat => `
-      <tr>
-        <td style="padding: 5px; text-align: center; border: 1px solid #ddd;">${cat.toUpperCase()}</td>
-        <td style="padding: 5px; text-align: center; border: 1px solid #ddd;">${(savedCounts[cat] || 0n).toString()}</td>
-      </tr>
-    `).join('');
+    const categoriesText = ALL_CATEGORIES.map(cat => 
+      `${cat.toUpperCase()}: ${(savedCounts[cat] || 0n).toString()}`
+    ).join('\n');
 
     const totalAB = ((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString();
 
-    const sequencesHtml = ALL_CATEGORIES.map(cat => {
+    const sequencesText = ALL_CATEGORIES.map(cat => {
       if (sequencePairs[cat] && sequencePairs[cat].length > 0) {
-        return sequencePairs[cat].map(pair => `
-          <tr>
-            <td style="padding: 5px; border: 1px solid #ddd;">${cat.toUpperCase()}</td>
-            <td style="padding: 5px; border: 1px solid #ddd;">${pair.initial}</td>
-            <td style="padding: 5px; border: 1px solid #ddd;">${pair.final}</td>
-          </tr>
-        `).join('');
+        const pairsText = sequencePairs[cat].map(pair => `  - De ${pair.initial} a ${pair.final}`).join('\n');
+        return `${cat.toUpperCase()}:\n${pairsText}`;
       }
-      return '';
-    }).join('');
+      return null;
+    }).filter(Boolean).join('\n\n');
 
-    const emailBodyHtml = `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        <h3>Relatório de Contagem de Estoque</h3>
-        <p><strong>Agência:</strong> ${agencyName} (${agencyNumber})</p>
-        <p><strong>Data:</strong> ${reportDate}</p>
-        <hr>
-        <h4>Totais por Categoria:</h4>
-        <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd;">
-          <thead style="background-color: #f2f2f2;">
-            <tr>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Categoria</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${categoriesHtml}
-            <tr>
-              <td style="padding: 5px; text-align: center; border: 1px solid #ddd;">Tipo AB</td>
-              <td style="padding: 5px; text-align: center; border: 1px solid #ddd;">${totalAB}</td>
-            </tr>
-            <tr style="background-color: #f2f2f2;">
-              <td style="padding: 5px; text-align: center; border: 1px solid #ddd;"><strong>Total Geral</strong></td>
-              <td style="padding: 5px; text-align: center; border: 1px solid #ddd;"><strong>${grandTotal.toString()}</strong></td>
-            </tr>
-          </tbody>
-        </table>
-        <br>
-        ${sequencesHtml ? `
-        <h4>Sequências Lidas:</h4>
-        <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd;">
-          <thead style="background-color: #f2f2f2;">
-            <tr>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Categoria</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Inicial</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Final</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${sequencesHtml}
-          </tbody>
-        </table>
-        ` : ''}
-      </div>
-    `;
+    const emailBodyText = `Relatório de Contagem de Estoque
+=================================
+Agência: ${agencyName} (${agencyNumber})
+Data: ${reportDate}
+=================================
+
+TOTAIS POR CATEGORIA
+---------------------------------
+${categoriesText}
+Tipo AB: ${totalAB}
+---------------------------------
+TOTAL GERAL: ${grandTotal.toString()}
+=================================
+${sequencesText ? `
+
+SEQUÊNCIAS LIDAS
+---------------------------------
+${sequencesText}
+` : ''}
+    `.trim();
 
     const subject = `Relatório de Contagem de Estoque - ${agencyName} - ${reportDate}`;
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBodyHtml)}`;
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBodyText)}`;
 
     window.location.href = mailtoLink;
     
