@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -67,6 +68,7 @@ export default function Home() {
   const { toast } = useToast();
   const { firestore } = useFirebase();
 
+  // Carrega a sessão local ao iniciar
   useEffect(() => {
     try {
       const savedSession = localStorage.getItem("stock-counter-session");
@@ -91,9 +93,11 @@ export default function Home() {
     }
   }, []);
 
+  // Salva a sessão local sempre que houver mudança nos dados atuais
   useEffect(() => {
     try {
       if (Object.keys(savedCounts).length === 0 && !agencyNumber && !agencyName) {
+        // Se estiver tudo vazio, removemos a chave do localStorage para evitar poluição
         if (localStorage.getItem("stock-counter-session")) {
             localStorage.removeItem("stock-counter-session");
         }
@@ -166,6 +170,7 @@ export default function Home() {
     setCategory(null);
   }, []);
   
+  // Limpa apenas o progresso local (não afeta o histórico salvo no banco)
   const clearSession = () => {
       setSavedCounts({});
       setSequencePairs({});
@@ -513,9 +518,9 @@ export default function Home() {
       <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
         <AlertDialogContent className="bg-card border-destructive">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-black uppercase italic text-destructive">Limpar Dados</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-black uppercase italic text-destructive">Limpar Contagem</AlertDialogTitle>
             <AlertDialogDescription className="text-white">
-              Isso apagará todas as contagens atuais do sistema e da memória local. Tem certeza?
+              Isso apagará todas as contagens ATUAIS da tela e da memória local. O histórico global permanecerá intacto. Tem certeza?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -524,7 +529,7 @@ export default function Home() {
               onClick={() => { clearSession(); setIsClearAlertOpen(false); }}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Excluir Tudo
+              Limpar Tudo
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

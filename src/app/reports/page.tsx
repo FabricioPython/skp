@@ -50,6 +50,7 @@ export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("a");
 
+  // Carrega todos os relatórios do Firestore (Independente do dispositivo)
   const reportsQuery = useMemo(() => {
     if (!firestore) return null;
     return query(collection(firestore, "reports"), orderBy("createdAt", "desc"));
