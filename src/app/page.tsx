@@ -40,7 +40,6 @@ import { jsPDF } from "jspdf";
 import { useFirebase } from "@/firebase/provider";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 type ScanTarget = "initial" | "final";
 const ALL_CATEGORIES = ['a', 'b', 'c'];
@@ -295,44 +294,42 @@ export default function Home() {
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
+    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background text-foreground">
       <div className="w-full max-w-5xl space-y-6">
-        <header className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-b border-white/10">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-primary">
+        <header className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-b">
+          <h1 className="text-3xl font-bold tracking-tight text-primary">
             countSKP
           </h1>
-          <div className="flex gap-3">
-             <Button variant="outline" size="lg" asChild className="font-semibold">
+          <div className="flex gap-2">
+             <Button variant="outline" asChild>
                 <Link href="/reports">
-                  <History className="mr-2 h-5 w-5" /> Histórico
+                  <History className="mr-2 h-4 w-4" /> Histórico
                 </Link>
              </Button>
-             <Button variant="destructive" size="lg" onClick={() => setIsClearAlertOpen(true)} className="font-semibold">
-                <Eraser className="mr-2 h-5 w-5" /> Limpar
+             <Button variant="destructive" onClick={() => setIsClearAlertOpen(true)}>
+                <Eraser className="mr-2 h-4 w-4" /> Limpar
               </Button>
           </div>
         </header>
 
         {error && (
             <Alert variant="destructive">
-              <AlertTitle className="font-bold">Erro na Contagem</AlertTitle>
-              <AlertDescription className="text-base">{error}</AlertDescription>
+              <AlertTitle>Erro</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          <div className="space-y-8">
-            <Card className="shadow-lg border-0 bg-card ring-1 ring-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-xl font-bold">Scanner Manual</CardTitle>
-                <CardDescription className="text-muted-foreground">Insira ou escaneie as sequências de códigos.</CardDescription>
+                <CardTitle>Entrada Manual</CardTitle>
+                <CardDescription>Escaneie ou digite as sequências.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Código Inicial
-                  </Label>
-                  <div className="flex items-center gap-2">
+                  <Label>Código Inicial</Label>
+                  <div className="flex gap-2">
                     <Input
                       type="text"
                       value={initialCode || ""}
@@ -340,19 +337,16 @@ export default function Home() {
                         setInitialCode(e.target.value.replace(/[\D\t]/g, ''));
                         setCount(0n);
                       }}
-                      placeholder="0000000000"
-                      className="flex-1 h-12 text-xl font-mono font-bold text-center bg-white text-card-foreground border-primary/20"
+                      placeholder="Código inicial"
                     />
-                    <Button variant="secondary" size="icon" className="h-12 w-12" onClick={() => setScanningFor("initial")}>
-                      <Camera className="h-5 w-5" />
+                    <Button variant="secondary" size="icon" onClick={() => setScanningFor("initial")}>
+                      <Camera className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Código Final
-                  </Label>
-                  <div className="flex items-center gap-2">
+                  <Label>Código Final</Label>
+                  <div className="flex gap-2">
                     <Input
                       type="text"
                       value={finalCode || ""}
@@ -360,190 +354,147 @@ export default function Home() {
                         setFinalCode(e.target.value.replace(/[\D\t]/g, ''));
                         setCount(0n);
                       }}
-                      placeholder="0000000000"
-                      className="flex-1 h-12 text-xl font-mono font-bold text-center bg-white text-card-foreground border-primary/20"
+                      placeholder="Código final"
                     />
-                    <Button variant="secondary" size="icon" className="h-12 w-12" onClick={() => setScanningFor("final")} disabled={!initialCode}>
-                      <Camera className="h-5 w-5" />
+                    <Button variant="secondary" size="icon" onClick={() => setScanningFor("final")} disabled={!initialCode}>
+                      <Camera className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex-col gap-3 pt-4">
+              <CardFooter className="flex-col gap-2">
                  <Button
-                  size="lg"
+                  className="w-full"
                   onClick={handleCount}
                   disabled={!initialCode || !finalCode}
-                  className="w-full h-12 text-base font-bold shadow-md"
                 >
-                  <Calculator className="mr-2 h-5 w-5" /> Calcular Contagem
+                  <Calculator className="mr-2 h-4 w-4" /> Calcular
                 </Button>
                 {(initialCode || finalCode) && (
-                  <Button variant="ghost" onClick={resetAll} className="w-full text-muted-foreground hover:text-foreground">
-                    <RefreshCcw className="mr-2 h-4 w-4" /> Resetar Campos
+                  <Button variant="ghost" onClick={resetAll} className="w-full">
+                    <RefreshCcw className="mr-2 h-4 w-4" /> Resetar
                   </Button>
                 )}
               </CardFooter>
             </Card>
 
-            <Card className="shadow-lg border-0 ring-1 ring-white/10">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-xl font-bold">Resultado</CardTitle>
+                <CardTitle>Resultado</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="bg-primary/10 border border-primary/20 rounded-xl py-8 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">Itens Contados</span>
-                  <p className="text-7xl font-bold tracking-tighter text-primary">{count.toString()}</p>
+                <div className="text-center py-6 bg-secondary/20 rounded-lg">
+                  <p className="text-sm font-medium text-muted-foreground uppercase">Itens</p>
+                  <p className="text-6xl font-bold">{count.toString()}</p>
                 </div>
                 <div>
-                  <Label className="mb-4 block text-center text-xs font-semibold uppercase text-muted-foreground">Categoria</Label>
-                  <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-6">
+                  <Label className="mb-2 block text-center">Categoria</Label>
+                  <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4">
                     {ALL_CATEGORIES.map(cat => (
-                      <div key={cat} className="flex flex-col items-center gap-1">
-                        <RadioGroupItem value={cat} id={`cat-${cat}`} className="h-6 w-6 border-2" />
-                        <Label htmlFor={`cat-${cat}`} className="text-xl font-bold uppercase">{cat}</Label>
+                      <div key={cat} className="flex items-center space-x-2">
+                        <RadioGroupItem value={cat} id={`cat-${cat}`} />
+                        <Label htmlFor={`cat-${cat}`} className="text-lg uppercase">{cat}</Label>
                       </div>
                     ))}
                   </RadioGroup>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button size="lg" onClick={handleSave} disabled={!category || count <= 0n} className="w-full h-12 text-base font-bold">
-                  <Save className="mr-2 h-5 w-5" /> Adicionar ao Resumo
+                <Button className="w-full" onClick={handleSave} disabled={!category || count <= 0n}>
+                  <Save className="mr-2 h-4 w-4" /> Adicionar
                 </Button>
               </CardFooter>
             </Card>
           </div>
           
-          <div className="space-y-8">
+          <div className="space-y-6">
              {Object.keys(savedCounts).length > 0 && (
-              <Card className="shadow-lg border-0 ring-1 ring-white/10">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl font-bold">
-                    <Archive className="h-5 w-5 text-primary" />
-                    Resumo Atual
+                  <CardTitle className="flex items-center gap-2">
+                    <Archive className="h-5 w-5" />
+                    Resumo
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2">
                    {ALL_CATEGORIES.map((cat) => (
-                    <div key={cat} className="flex justify-between items-center bg-secondary/30 p-3 rounded-lg border border-white/5">
-                      <span className="font-bold text-lg uppercase text-primary">{cat}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-2xl tracking-tight">{(savedCounts[cat] || 0n).toString()}</span>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleIncrementClick(cat)}>
-                          <PlusCircle className="h-5 w-5" />
+                    <div key={cat} className="flex justify-between items-center p-2 bg-secondary/10 rounded">
+                      <span className="font-bold uppercase">Cat {cat}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl font-bold">{(savedCounts[cat] || 0n).toString()}</span>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleIncrementClick(cat)}>
+                          <PlusCircle className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   ))}
-                  <div className="flex justify-between items-center p-4 mt-4 rounded-lg bg-primary text-primary-foreground shadow-md">
-                    <span className="font-bold text-base uppercase">Total Geral</span>
-                    <span className="font-bold text-3xl tracking-tight">{grandTotal.toString()}</span>
+                  <div className="flex justify-between items-center p-3 mt-4 bg-primary text-primary-foreground rounded-lg">
+                    <span className="font-bold uppercase">Total</span>
+                    <span className="text-2xl font-bold">{grandTotal.toString()}</span>
                   </div>
                 </CardContent>
               </Card>
             )}
 
             {Object.keys(savedCounts).length > 0 && (
-              <Card className="shadow-lg border-0 ring-1 ring-white/10">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold">Agência</CardTitle>
-                  <CardDescription>Informe o número da agência para validar.</CardDescription>
+                  <CardTitle>Agência</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-3">
+                  <div className="flex gap-2">
                     <Input
                       type="number"
-                      placeholder="0000"
+                      placeholder="Número da agência"
                       value={agencyNumber}
                       onChange={(e) => setAgencyNumber(e.target.value)}
                       disabled={isFetchingAgency}
-                      className="h-12 text-xl font-bold bg-white text-card-foreground"
                     />
-                    <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber} className="h-12 w-12" size="icon">
-                      <Search className="h-5 w-5" />
+                    <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber} size="icon">
+                      <Search className="h-4 w-4" />
                     </Button>
                   </div>
-                  {isFetchingAgency && <p className="text-sm font-semibold text-primary animate-pulse mt-2">Validando...</p>}
-                  {agencyError && (
-                    <div className="mt-2">
-                      <Alert variant="destructive" className="py-2">
-                        <AlertDescription className="text-xs font-semibold">{agencyError}</AlertDescription>
-                      </Alert>
-                    </div>
-                  )}
+                  {isFetchingAgency && <p className="text-xs text-primary mt-2">Buscando...</p>}
+                  {agencyError && <p className="text-xs text-destructive mt-2">{agencyError}</p>}
                 </CardContent>
               </Card>
             )}
 
             {agencyName && reportDate && (
-              <div className="space-y-4 animate-in zoom-in-95">
-                {/* O Design do Relatório (PDF) é mantido com alto contraste e fontes Black como solicitado */}
-                <Card ref={reportRef} className="shadow-2xl bg-white text-black border-4 border-black/5">
-                  <CardHeader className="p-6">
-                    <CardTitle className="flex items-center gap-3 text-3xl font-black uppercase tracking-tighter">
-                      <FileText className="h-8 w-8" />
-                      Relatório SKP
+              <div className="space-y-4">
+                <Card ref={reportRef} className="bg-white text-black border-2">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-2xl font-bold uppercase">
+                      <FileText className="h-6 w-6" />
+                      Relatório
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6 p-6">
-                    <div className="grid grid-cols-2 gap-4 text-lg">
-                      <div>
-                        <span className="block text-xs font-black uppercase text-muted-foreground/60 mb-1">Agência</span>
-                        <p className="font-black">{agencyName} ({agencyNumber})</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="block text-xs font-black uppercase text-muted-foreground/60 mb-1">Data da Coleta</span>
-                        <p className="font-black">{reportDate}</p>
-                      </div>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between text-sm">
+                      <span><strong>Agência:</strong> {agencyName}</span>
+                      <span><strong>Data:</strong> {reportDate}</span>
                     </div>
                     <Separator className="bg-black/10" />
-                    <div className="space-y-3">
-                        <h4 className="font-black text-sm uppercase tracking-widest text-black/50">Consolidado</h4>
+                    <div className="space-y-2">
                         {ALL_CATEGORIES.map((cat) => (
-                          <div key={cat} className="flex justify-between items-center bg-black/5 p-4 rounded-lg">
-                            <span className="font-black text-xl uppercase">Categoria {cat}</span>
-                            <span className="font-black text-2xl">{(savedCounts[cat] || 0n).toString()}</span>
+                          <div key={cat} className="flex justify-between">
+                            <span className="uppercase">Cat {cat}:</span>
+                            <span className="font-bold">{(savedCounts[cat] || 0n).toString()}</span>
                           </div>
                         ))}
-                        <div className="flex justify-between items-center bg-black/5 p-4 rounded-lg border-2 border-dashed border-black/10">
-                          <span className="font-black text-xl uppercase">Grupo A + B</span>
-                          <span className="font-black text-2xl">{((savedCounts.a || 0n) + (savedCounts.b || 0n)).toString()}</span>
-                        </div>
                     </div>
-                    {Object.keys(sequencePairs).length > 0 && (
-                      <div className="space-y-3 pt-4">
-                        <h4 className="font-black text-sm uppercase tracking-widest text-black/50">Registros de Sequência</h4>
-                        <div className="space-y-2 text-sm font-mono font-bold bg-black/5 p-4 rounded-lg">
-                            {ALL_CATEGORIES.map(cat => (
-                              sequencePairs[cat] && sequencePairs[cat].length > 0 && (
-                                <div key={cat} className="mb-4 last:mb-0">
-                                  <p className="text-xs font-black uppercase text-black/40 mb-2">{cat}</p>
-                                  {sequencePairs[cat].map((pair, index) => (
-                                    <div key={index} className="flex justify-between items-center mb-1">
-                                      <span>{pair.initial}</span>
-                                      <span className="text-black/30">→</span>
-                                      <span>{pair.final}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )
-                            ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center p-5 rounded-xl bg-black text-white shadow-xl">
-                      <span className="font-black text-xl uppercase">Total Final</span>
-                      <span className="font-black text-4xl tracking-tighter">{grandTotal.toString()}</span>
+                    <div className="flex justify-between p-2 bg-black text-white rounded">
+                      <span className="font-bold uppercase">Total Geral</span>
+                      <span className="font-bold">{grandTotal.toString()}</span>
                     </div>
                   </CardContent>
                 </Card>
-                <div className="flex flex-col sm:flex-row gap-3">
-                    <Button onClick={handleSendEmail} className="flex-1 h-14 text-lg font-bold uppercase" variant="outline">
-                        <Mail className="mr-2 h-6 w-6" /> Enviar
+                <div className="flex gap-2">
+                    <Button onClick={handleSendEmail} className="flex-1" variant="outline">
+                        <Mail className="mr-2 h-4 w-4" /> Enviar
                     </Button>
-                    <Button onClick={handleShareAndFinalize} className="flex-1 h-14 text-lg font-bold uppercase">
-                        <Save className="mr-2 h-6 w-6" /> Salvar
+                    <Button onClick={handleShareAndFinalize} className="flex-1">
+                        <Save className="mr-2 h-4 w-4" /> Salvar
                     </Button>
                 </div>
               </div>
@@ -555,12 +506,9 @@ export default function Home() {
       <Dialog open={!!scanningFor} onOpenChange={(open) => !open && setScanningFor(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Scanner {scanningFor === 'initial' ? 'Inicial' : 'Final'}</DialogTitle>
+            <DialogTitle>Scanner {scanningFor === 'initial' ? 'Inicial' : 'Final'}</DialogTitle>
           </DialogHeader>
-          <div className="relative -mx-6 -mb-6 bg-black rounded-b-lg overflow-hidden border-t">
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <div className="w-[85%] h-[2px] bg-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.4)] rounded-full"></div>
-            </div>
+          <div className="relative overflow-hidden rounded-lg bg-black aspect-square">
             <BarcodeScanner onScan={handleScan} paused={!scanningFor} />
           </div>
         </DialogContent>
@@ -569,14 +517,14 @@ export default function Home() {
       <AlertDialog open={isIncrementAlertOpen} onOpenChange={setIsIncrementAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold">Adicionar Unidade</AlertDialogTitle>
+            <AlertDialogTitle>Adicionar Unidade</AlertDialogTitle>
             <AlertDialogDescription>
-              Confirma o incremento de 1 unidade na categoria {categoryToIncrement?.toUpperCase()}?
+              Deseja adicionar +1 à categoria {categoryToIncrement?.toUpperCase()}?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmIncrement}>Confirmar</AlertDialogAction>
+            <AlertDialogCancel>Não</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmIncrement}>Sim</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -584,18 +532,18 @@ export default function Home() {
       <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold text-destructive">Limpar Sessão</AlertDialogTitle>
+            <AlertDialogTitle>Limpar Dados</AlertDialogTitle>
             <AlertDialogDescription>
-              Todos os dados não salvos serão permanentemente apagados. Deseja continuar?
+              Isso apagará todas as contagens atuais. Continuar?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Manter Dados</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { clearSession(); setIsClearAlertOpen(false); }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90"
             >
-              Sim, Limpar Tudo
+              Limpar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
