@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, PlusCircle, Eraser, Save, Mail, History, ArrowRight } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, PlusCircle, Eraser, Save, History, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,12 +31,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import BarcodeScanner from "@/components/barcode-scanner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { agencies } from "@/lib/agencies";
 import { useToast } from "@/hooks/use-toast";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import { useFirebase } from "@/firebase/provider";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
@@ -213,47 +210,6 @@ export default function Home() {
       setAgencyError("Agência não encontrada. Por favor, verifique o número.");
     }
     setIsFetchingAgency(false);
-  };
-  
-  const handleSendEmail = async () => {
-    if (!reportRef.current || !agencyName || !reportDate || grandTotal === 0n) {
-      toast({ title: "Erro", description: "Dados insuficientes para gerar o e-mail.", variant: "destructive" });
-      return;
-    }
-    try {
-      // Temporary styling for capture to match PDF best practices (white background, black text)
-      const originalStyle = reportRef.current.style.cssText;
-      reportRef.current.style.backgroundColor = 'white';
-      reportRef.current.style.color = 'black';
-      
-      const canvas = await html2canvas(reportRef.current, { useCORS: true, scale: 2 });
-      
-      // Restore original style
-      reportRef.current.style.cssText = originalStyle;
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({ orientation: 'p', unit: 'px', format: [canvas.width, canvas.height] });
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      const pdfBlob = pdf.output('blob');
-      
-      const fileName = `Relatorio_${agencyName.replace(/\W/g, '_')}_${reportDate.replace(/\//g, '-')}.pdf`;
-      const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
-      const subject = `Relatório de Agencia ${agencyName}`;
-
-      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-        await navigator.share({ files: [pdfFile], title: subject });
-      } else {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(pdfBlob);
-        link.download = fileName;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        toast({ title: "Download Iniciado", description: "O PDF foi gerado e baixado." });
-      }
-    } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
-      toast({ title: "Erro", description: "Falha ao gerar o relatório em PDF.", variant: "destructive" });
-    }
   };
 
   const handleShareAndFinalize = async () => {
@@ -510,10 +466,7 @@ export default function Home() {
                 </div>
                 
                 <div className="flex gap-4">
-                    <Button onClick={handleSendEmail} className="flex-1 h-14 bg-white hover:bg-white/90 text-black text-lg font-black uppercase italic border-4 border-black shadow-[4px_4px_0px_white]">
-                        <Mail className="mr-2 h-6 w-6" /> Enviar
-                    </Button>
-                    <Button onClick={handleShareAndFinalize} className="flex-1 h-14 text-lg font-black uppercase italic shadow-[4px_4px_0px_#D6FF00]">
+                    <Button onClick={handleShareAndFinalize} className="w-full h-14 text-lg font-black uppercase italic shadow-[4px_4px_0px_#D6FF00]">
                         <Save className="mr-2 h-6 w-6" /> Salvar
                     </Button>
                 </div>
@@ -571,4 +524,3 @@ export default function Home() {
     </main>
   );
 }
-
