@@ -7,7 +7,7 @@ import { collection, query, orderBy, Timestamp } from "firebase/firestore";
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight } from "lucide-react";
+import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight, Copy } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 interface SequencePair {
   initial: string;
@@ -44,6 +45,7 @@ interface Report {
 
 export default function ReportsPage() {
   const { firestore } = useFirebase();
+  const { toast } = useToast();
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("a");
 
@@ -56,10 +58,45 @@ export default function ReportsPage() {
 
   const handleOpenSequences = (report: Report) => {
     setSelectedReport(report);
-    // Tenta selecionar a primeira categoria que tenha dados
     const categories = ['a', 'b', 'c'];
     const firstWithData = categories.find(cat => report.sequencePairs?.[cat]?.length > 0) || 'a';
     setSelectedCategory(firstWithData);
+  };
+
+  const handleCopySequenceList = (initial: string, final: string) => {
+    try {
+      const start = BigInt(initial);
+      const end = BigInt(final);
+      const diff = end - start + 1n;
+
+      if (diff > 5000n) {
+        toast({
+          title: "Intervalo muito grande",
+          description: "O intervalo excede 5000 itens. A lista completa não foi gerada para evitar lentidão.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const list: string[] = [];
+      for (let i = start; i <= end; i++) {
+        list.push(i.toString());
+      }
+      
+      const textToCopy = list.join('\n');
+      navigator.clipboard.writeText(textToCopy);
+      
+      toast({
+        title: "Lista Copiada!",
+        description: `${diff.toString()} códigos copiados para a área de transferência.`,
+      });
+    } catch (e) {
+      toast({
+        title: "Erro ao copiar",
+        description: "Não foi possível gerar a lista de códigos.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -165,7 +202,7 @@ export default function ReportsPage() {
           <DialogHeader>
             <DialogTitle>Sequências do Relatório</DialogTitle>
             <DialogDescription>
-              Selecione a categoria para ver os intervalos completos de códigos lidos.
+              Selecione a categoria para ver os intervalos e gerar a lista de códigos.
             </DialogDescription>
           </DialogHeader>
           
@@ -186,15 +223,15 @@ export default function ReportsPage() {
 
             <Separator />
 
-            <ScrollArea className="h-[300px] w-full rounded-md border p-4">
+            <ScrollArea className="h-[350px] w-full rounded-md border p-4">
               {currentSequences.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">Nenhuma sequência registrada nesta categoria.</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {currentSequences.map((pair, idx) => {
                     const diff = BigInt(pair.final) - BigInt(pair.initial) + 1n;
                     return (
-                      <div key={idx} className="bg-muted/40 p-3 rounded-lg border flex flex-col gap-2">
+                      <div key={idx} className="bg-muted/40 p-3 rounded-lg border flex flex-col gap-3">
                         <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold uppercase">
                           <span>Intervalo {idx + 1}</span>
                           <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full">{diff.toString()} itens</span>
@@ -210,6 +247,14 @@ export default function ReportsPage() {
                             <span>{pair.final}</span>
                           </div>
                         </div>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          className="w-full text-xs h-8"
+                          onClick={() => handleCopySequenceList(pair.initial, pair.final)}
+                        >
+                          <Copy className="h-3 w-3 mr-2" /> Copiar Lista de Códigos
+                        </Button>
                       </div>
                     );
                   })}
