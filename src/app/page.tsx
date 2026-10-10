@@ -432,11 +432,16 @@ export default function Home() {
                     Código de Barras Inicial
                   </Label>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center justify-center h-16 bg-card rounded-lg px-3 border">
-                      <p className="text-lg font-mono tracking-wider text-card-foreground break-all text-center">
-                        {initialCode || "..."}
-                      </p>
-                    </div>
+                    <Input
+                      type="text"
+                      value={initialCode || ""}
+                      onChange={(e) => {
+                        setInitialCode(e.target.value.replace(/[\D\t]/g, ''));
+                        setCount(0n);
+                      }}
+                      placeholder="Digite ou escaneie..."
+                      className="flex-1 h-16 text-lg font-mono tracking-wider text-center bg-card"
+                    />
                     <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0 bg-card" onClick={() => setScanningFor("initial")}>
                       <Camera className="h-6 w-6" />
                     </Button>
@@ -447,11 +452,16 @@ export default function Home() {
                     Código de Barras Final
                   </Label>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center justify-center h-16 bg-card rounded-lg px-3 border">
-                      <p className="text-lg font-mono tracking-wider text-card-foreground break-all text-center">
-                        {finalCode || "..."}
-                      </p>
-                    </div>
+                    <Input
+                      type="text"
+                      value={finalCode || ""}
+                      onChange={(e) => {
+                        setFinalCode(e.target.value.replace(/[\D\t]/g, ''));
+                        setCount(0n);
+                      }}
+                      placeholder="Digite ou escaneie..."
+                      className="flex-1 h-16 text-lg font-mono tracking-wider text-center bg-card"
+                    />
                     <Button variant="outline" size="icon" className="h-16 w-16 flex-shrink-0 bg-card" onClick={() => setScanningFor("final")} disabled={!initialCode}>
                       <Camera className="h-6 w-6" />
                     </Button>
