@@ -67,10 +67,10 @@ export default function ReportsPage() {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("RELATÓRIO DE ESTOQUE", 15, 20);
+    doc.text("RELATÓRIO DE AGÊNCIA", 15, 20);
     
     doc.setFontSize(10);
-    doc.text("Sistema countSKP - Gestão de Inventário Digital", 15, 28);
+    doc.text("countSKP", 15, 28);
     
     doc.setFontSize(12);
     doc.text(`Agência: ${report.agencyName} (${report.agencyNumber})`, 15, 36);
@@ -79,7 +79,7 @@ export default function ReportsPage() {
     // Resumo
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(16);
-    doc.text("Resumo Consolidado", 15, 55);
+    doc.text("Resumo", 15, 55);
     doc.setDrawColor(0, 86, 179);
     doc.setLineWidth(0.5);
     doc.line(15, 58, 200, 58);
@@ -88,7 +88,7 @@ export default function ReportsPage() {
     ['a', 'b', 'c'].forEach(cat => {
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text(`CATEGORIA ${cat.toUpperCase()}:`, 15, y);
+      doc.text(`Tipo ${cat.toUpperCase()}:`, 15, y);
       doc.setFont("helvetica", "normal");
       doc.text(`${report.savedCounts[cat] || "0"} unidades`, 70, y);
       y += 10;
@@ -99,7 +99,7 @@ export default function ReportsPage() {
     doc.rect(15, y, 180, 15, 'F');
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("TOTAL GERAL DE ITENS:", 20, y + 10);
+    doc.text("TOTAL DE ITENS:", 20, y + 10);
     doc.setTextColor(0, 86, 179);
     doc.text(`${report.grandTotal}`, 150, y + 10);
     
@@ -107,14 +107,14 @@ export default function ReportsPage() {
     y += 30;
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(16);
-    doc.text("Sequências Lidas (Intervalos)", 15, y);
+    doc.text("Sequências Lidas", 15, y);
     doc.line(15, y + 3, 200, y + 3);
     y += 15;
     
     // Cabeçalho da Tabela
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("CAT", 15, y);
+    doc.text("TIPO", 15, y);
     doc.text("INÍCIO", 40, y);
     doc.text("FIM", 100, y);
     doc.text("SUBTOTAL", 165, y);
@@ -128,7 +128,7 @@ export default function ReportsPage() {
           doc.addPage();
           y = 20;
           doc.setFont("helvetica", "bold");
-          doc.text("CAT", 15, y);
+          doc.text("TIPO", 15, y);
           doc.text("INÍCIO", 40, y);
           doc.text("FIM", 100, y);
           doc.text("SUBTOTAL", 165, y);
@@ -153,7 +153,7 @@ export default function ReportsPage() {
     
     toast({
       title: "PDF Gerado",
-      description: "O download do relatório completo foi iniciado.",
+      description: "O download do relatório foi iniciado.",
     });
   };
 
