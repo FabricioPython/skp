@@ -4,10 +4,10 @@
 import { useFirebase } from "@/firebase/provider";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { collection, query, orderBy, Timestamp } from "firebase/firestore";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight, Copy, FileDown, Cloud } from "lucide-react";
+import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight, Copy, FileDown, Cloud, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import {
   Dialog,
@@ -27,6 +27,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface SequencePair {
   initial: string;
@@ -58,11 +59,14 @@ export default function ReportsPage() {
 
   const { data: reports, loading, error } = useCollection<Report>(reportsQuery as any);
 
+  // Determina se estamos realmente em estado de carregamento inicial
+  const isInitialLoading = loading || !firestore;
+
   const generateReportPDF = (report: Report) => {
     const doc = new jsPDF();
     
     // Header
-    doc.setFillColor(0, 86, 179); // Azul Profissional
+    doc.setFillColor(0, 86, 179);
     doc.rect(0, 0, 210, 40, 'F');
     
     doc.setTextColor(255, 255, 255);
@@ -137,12 +141,16 @@ export default function ReportsPage() {
           y += 10;
           doc.setFont("helvetica", "normal");
         }
-        const diff = BigInt(pair.final) - BigInt(pair.initial) + 1n;
-        doc.text(cat.toUpperCase(), 15, y);
-        doc.text(pair.initial, 40, y);
-        doc.text(pair.final, 100, y);
-        doc.text(diff.toString(), 165, y);
-        y += 8;
+        try {
+          const diff = BigInt(pair.final) - BigInt(pair.initial) + 1n;
+          doc.text(cat.toUpperCase(), 15, y);
+          doc.text(pair.initial, 40, y);
+          doc.text(pair.final, 100, y);
+          doc.text(diff.toString(), 165, y);
+          y += 8;
+        } catch(e) {
+          y += 8;
+        }
       });
     });
     
@@ -201,12 +209,32 @@ export default function ReportsPage() {
     }
   };
 
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-2xl font-black italic uppercase text-primary animate-pulse">Sincronizando Histórico Global...</p>
+        <div className="text-center space-y-4">
+            <Cloud className="h-12 w-12 text-primary mx-auto animate-bounce" />
+            <p className="text-2xl font-black italic uppercase text-primary animate-pulse">Sincronizando Banco Global...</p>
+        </div>
       </div>
     );
+  }
+
+  if (error) {
+    return (
+        <main className="flex min-h-screen flex-col items-center p-8 bg-background">
+             <Alert variant="destructive" className="max-w-md">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Erro de Conexão</AlertTitle>
+                <AlertDescription>
+                    Não foi possível carregar o histórico. Verifique sua conexão ou se o Firebase está configurado.
+                </AlertDescription>
+            </Alert>
+            <Button asChild className="mt-4">
+                <Link href="/">Voltar ao Início</Link>
+            </Button>
+        </main>
+    )
   }
 
   const currentSequences = selectedReport?.sequencePairs?.[selectedCategory] || [];
@@ -223,7 +251,7 @@ export default function ReportsPage() {
           <div className="text-center">
             <h1 className="text-3xl font-black italic uppercase text-primary tracking-tighter">Histórico Global</h1>
             <p className="flex items-center justify-center gap-2 text-[10px] text-white/40 uppercase font-bold tracking-widest mt-1">
-              <Cloud className="h-3 w-3" /> Sincronizado com o Servidor
+              <Cloud className="h-3 w-3" /> Base de Dados Centralizada
             </p>
           </div>
           <div className="hidden sm:block w-20"></div>
@@ -232,7 +260,7 @@ export default function ReportsPage() {
         {!reports || reports.length === 0 ? (
           <div className="text-center py-20 bg-card/50 rounded-xl border border-white/5">
             <FileText className="h-16 w-16 mx-auto text-white/20 mb-4" />
-            <p className="text-white/40 font-bold uppercase">Nenhum relatório salvo em nenhum dispositivo.</p>
+            <p className="text-white/40 font-bold uppercase">Nenhum relatório encontrado na nuvem.</p>
           </div>
         ) : (
           <div className="grid gap-6">
@@ -321,12 +349,16 @@ export default function ReportsPage() {
               ) : (
                 <div className="space-y-4">
                   {currentSequences.map((pair, idx) => {
-                    const diff = BigInt(pair.final) - BigInt(pair.initial) + 1n;
+                    let diff = "0";
+                    try {
+                        diff = (BigInt(pair.final) - BigInt(pair.initial) + 1n).toString();
+                    } catch(e) {}
+                    
                     return (
                       <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-4 hover:border-primary/30 transition-all">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-black uppercase tracking-widest text-primary">Item {idx + 1}</span>
-                          <span className="bg-primary text-background px-3 py-1 rounded-full text-[10px] font-black uppercase italic">{diff.toString()} ITENS</span>
+                          <span className="bg-primary text-background px-3 py-1 rounded-full text-[10px] font-black uppercase italic">{diff} ITENS</span>
                         </div>
                         <div className="flex items-center justify-between font-mono text-lg font-bold text-white/90">
                           <div className="flex flex-col items-center">

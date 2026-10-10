@@ -14,7 +14,7 @@ import { useFirebase } from '../provider';
 /**
  * `useCollection` is a custom hook that provides a real-time stream of documents from a Cloud Firestore collection.
  *
- * @param {string | null | undefined} path - The path to the collection.
+ * @param {string | null | undefined} query - The query to the collection.
  * @returns An object containing the collection data, loading state, and any errors.
  *
  * @example
@@ -22,7 +22,7 @@ import { useFirebase } from '../provider';
  * import { useCollection } from './firebase/firestore/use-collection';
  *
  * function MyComponent() {
- *   const { data, loading, error } = useCollection('my-collection');
+ *   const { data, loading, error } = useCollection(myQuery);
  *   // ...
  * }
  * ```
@@ -35,10 +35,15 @@ export const useCollection = <T extends DocumentData>(
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // Se a query for nula, significa que o Firestore ainda está inicializando
     if (!query) {
-      setLoading(false);
+      // Mantemos loading como true até que uma query real chegue,
+      // a menos que queiramos explicitamente dizer que não há busca.
+      // Aqui, preferimos esperar a inicialização.
       return;
     }
+
+    setLoading(true);
 
     const unsubscribe = onSnapshot(
       query,
@@ -50,6 +55,7 @@ export const useCollection = <T extends DocumentData>(
         setLoading(false);
       },
       (err) => {
+        console.error("Erro na busca de coleção:", err);
         setError(err);
         setLoading(false);
       }
@@ -60,5 +66,3 @@ export const useCollection = <T extends DocumentData>(
 
   return { data, loading, error };
 };
-
-    
