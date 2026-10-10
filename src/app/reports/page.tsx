@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFirebase } from "@/firebase/provider";
@@ -6,9 +7,8 @@ import { collection, query, orderBy, Timestamp } from "firebase/firestore";
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight, Copy } from "lucide-react";
+import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight, Copy, FileDown } from "lucide-react";
 import Link from "next/link";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { jsPDF } from "jspdf";
 
 interface SequencePair {
   initial: string;
@@ -55,6 +56,106 @@ export default function ReportsPage() {
   }, [firestore]);
 
   const { data: reports, loading, error } = useCollection<Report>(reportsQuery as any);
+
+  const generateReportPDF = (report: Report) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFillColor(0, 86, 179); // Azul Profissional
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("RELATÓRIO DE ESTOQUE", 15, 20);
+    
+    doc.setFontSize(10);
+    doc.text("Sistema countSKP - Gestão de Inventário Digital", 15, 28);
+    
+    doc.setFontSize(12);
+    doc.text(`Agência: ${report.agencyName} (${report.agencyNumber})`, 15, 36);
+    doc.text(`Data: ${report.reportDate}`, 150, 36);
+    
+    // Resumo
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(16);
+    doc.text("Resumo Consolidado", 15, 55);
+    doc.setDrawColor(0, 86, 179);
+    doc.setLineWidth(0.5);
+    doc.line(15, 58, 200, 58);
+    
+    let y = 70;
+    ['a', 'b', 'c'].forEach(cat => {
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(`CATEGORIA ${cat.toUpperCase()}:`, 15, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${report.savedCounts[cat] || "0"} unidades`, 70, y);
+      y += 10;
+    });
+    
+    y += 5;
+    doc.setFillColor(240, 240, 240);
+    doc.rect(15, y, 180, 15, 'F');
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL GERAL DE ITENS:", 20, y + 10);
+    doc.setTextColor(0, 86, 179);
+    doc.text(`${report.grandTotal}`, 150, y + 10);
+    
+    // Sequências
+    y += 30;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(16);
+    doc.text("Sequências Lidas (Intervalos)", 15, y);
+    doc.line(15, y + 3, 200, y + 3);
+    y += 15;
+    
+    // Cabeçalho da Tabela
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("CAT", 15, y);
+    doc.text("INÍCIO", 40, y);
+    doc.text("FIM", 100, y);
+    doc.text("SUBTOTAL", 165, y);
+    doc.line(15, y + 2, 200, y + 2);
+    y += 10;
+    
+    doc.setFont("helvetica", "normal");
+    Object.entries(report.sequencePairs || {}).forEach(([cat, pairs]) => {
+      pairs.forEach((pair) => {
+        if (y > 275) {
+          doc.addPage();
+          y = 20;
+          doc.setFont("helvetica", "bold");
+          doc.text("CAT", 15, y);
+          doc.text("INÍCIO", 40, y);
+          doc.text("FIM", 100, y);
+          doc.text("SUBTOTAL", 165, y);
+          doc.line(15, y + 2, 200, y + 2);
+          y += 10;
+          doc.setFont("helvetica", "normal");
+        }
+        const diff = BigInt(pair.final) - BigInt(pair.initial) + 1n;
+        doc.text(cat.toUpperCase(), 15, y);
+        doc.text(pair.initial, 40, y);
+        doc.text(pair.final, 100, y);
+        doc.text(diff.toString(), 165, y);
+        y += 8;
+      });
+    });
+    
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Documento gerado em ${new Date().toLocaleString('pt-BR')}`, 15, 285);
+    
+    doc.save(`Relatorio_Agencia_${report.agencyNumber}.pdf`);
+    
+    toast({
+      title: "PDF Gerado",
+      description: "O download do relatório completo foi iniciado.",
+    });
+  };
 
   const handleOpenSequences = (report: Report) => {
     setSelectedReport(report);
@@ -160,13 +261,19 @@ export default function ReportsPage() {
                     ))}
                   </div>
                 </CardContent>
-                <CardFooter className="border-t border-white/5 pt-4">
+                <CardFooter className="border-t border-white/5 pt-4 flex flex-col gap-2">
+                  <Button 
+                    className="w-full bg-primary text-background hover:bg-primary/90 font-black uppercase italic" 
+                    onClick={() => generateReportPDF(report)}
+                  >
+                    <FileDown className="mr-2 h-4 w-4" /> Gerar Relatório Completo (PDF)
+                  </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full border-primary/20 hover:bg-primary hover:text-background font-black uppercase italic" 
+                    className="w-full border-primary/20 hover:bg-white/5 text-white/60 font-black uppercase italic" 
                     onClick={() => handleOpenSequences(report)}
                   >
-                    <ListTree className="mr-2 h-4 w-4" /> Ver Sequências
+                    <ListTree className="mr-2 h-4 w-4" /> Ver Sequências no App
                   </Button>
                 </CardFooter>
               </Card>
@@ -250,4 +357,3 @@ export default function ReportsPage() {
     </main>
   );
 }
-
