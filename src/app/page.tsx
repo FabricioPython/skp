@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, PlusCircle, Eraser, Save, History, ArrowRight } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Archive, Search, PlusCircle, Eraser, Save, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -212,30 +212,38 @@ export default function Home() {
     setIsFetchingAgency(false);
   };
 
-  const handleShareAndFinalize = async () => {
+  const handleShareAndFinalize = () => {
     if (!agencyName || !firestore || grandTotal === 0n) return;
-    try {
-        const countsAsString = Object.entries(savedCounts).reduce((acc, [key, value]) => {
-          acc[key] = value.toString();
-          return acc;
-        }, {} as Record<string, string>);
-      
-        const reportsRef = collection(firestore, "reports");
-        await addDoc(reportsRef, {
-          agencyNumber,
-          agencyName,
-          reportDate: reportDate,
-          savedCounts: countsAsString,
-          sequencePairs: sequencePairs,
-          grandTotal: grandTotal.toString(),
-          createdAt: serverTimestamp(),
-        });
-        toast({ title: "Relatório Salvo!", description: "Histórico atualizado com sucesso." });
+    
+    const countsAsString = Object.entries(savedCounts).reduce((acc, [key, value]) => {
+      acc[key] = value.toString();
+      return acc;
+    }, {} as Record<string, string>);
+  
+    const reportsRef = collection(firestore, "reports");
+    const reportData = {
+      agencyNumber,
+      agencyName,
+      reportDate: reportDate,
+      savedCounts: countsAsString,
+      sequencePairs: sequencePairs,
+      grandTotal: grandTotal.toString(),
+      createdAt: serverTimestamp(),
+    };
+
+    addDoc(reportsRef, reportData)
+      .then(() => {
+        toast({ title: "Relatório Salvo!", description: "A página será reiniciada." });
         clearSession();
-    } catch (error) {
-      console.error("Error saving report: ", error);
-      toast({ title: "Erro", description: "Não foi possível salvar no Firebase.", variant: "destructive" });
-    }
+        // Recarrega a página após um curto delay para permitir que o usuário veja o toast
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      })
+      .catch((err) => {
+        console.error("Erro ao salvar relatório: ", err);
+        toast({ title: "Erro", description: "Não foi possível salvar os dados.", variant: "destructive" });
+      });
   };
   
   const handleIncrementClick = (cat: string) => {
