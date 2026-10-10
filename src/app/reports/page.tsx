@@ -7,7 +7,7 @@ import { collection, query, orderBy, Timestamp } from "firebase/firestore";
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight, Copy, FileDown } from "lucide-react";
+import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight, Copy, FileDown, Cloud } from "lucide-react";
 import Link from "next/link";
 import {
   Dialog,
@@ -203,7 +203,7 @@ export default function ReportsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-2xl font-black italic uppercase text-primary animate-pulse">Carregando Histórico...</p>
+        <p className="text-2xl font-black italic uppercase text-primary animate-pulse">Sincronizando Histórico Global...</p>
       </div>
     );
   }
@@ -213,20 +213,25 @@ export default function ReportsPage() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background">
       <div className="w-full max-w-4xl space-y-6">
-        <header className="flex items-center justify-between py-6 border-b border-white/10">
+        <header className="flex flex-col sm:flex-row items-center justify-between py-6 border-b border-white/10 gap-4">
           <Button variant="ghost" asChild className="text-white/60 hover:text-primary">
             <Link href="/" className="flex items-center gap-2">
               <ChevronLeft className="h-4 w-4" /> Voltar
             </Link>
           </Button>
-          <h1 className="text-3xl font-black italic uppercase text-primary tracking-tighter">Histórico</h1>
-          <div className="w-20"></div>
+          <div className="text-center">
+            <h1 className="text-3xl font-black italic uppercase text-primary tracking-tighter">Histórico Global</h1>
+            <p className="flex items-center justify-center gap-2 text-[10px] text-white/40 uppercase font-bold tracking-widest mt-1">
+              <Cloud className="h-3 w-3" /> Sincronizado com o Servidor
+            </p>
+          </div>
+          <div className="hidden sm:block w-20"></div>
         </header>
 
         {!reports || reports.length === 0 ? (
           <div className="text-center py-20 bg-card/50 rounded-xl border border-white/5">
             <FileText className="h-16 w-16 mx-auto text-white/20 mb-4" />
-            <p className="text-white/40 font-bold uppercase">Nenhum relatório salvo no sistema.</p>
+            <p className="text-white/40 font-bold uppercase">Nenhum relatório salvo em nenhum dispositivo.</p>
           </div>
         ) : (
           <div className="grid gap-6">
@@ -299,9 +304,9 @@ export default function ReportsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-primary">
-                  <SelectItem value="a" className="font-bold uppercase italic">Categoria A</SelectItem>
-                  <SelectItem value="b" className="font-bold uppercase italic">Categoria B</SelectItem>
-                  <SelectItem value="c" className="font-bold uppercase italic">Categoria C</SelectItem>
+                  <SelectItem value="a" className="font-bold uppercase italic">Tipo A</SelectItem>
+                  <SelectItem value="b" className="font-bold uppercase italic">Tipo B</SelectItem>
+                  <SelectItem value="c" className="font-bold uppercase italic">Tipo C</SelectItem>
                 </SelectContent>
               </Select>
             </div>
