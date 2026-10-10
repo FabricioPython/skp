@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, PlusCircle, Eraser, Save, Mail } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, PlusCircle, Eraser, Save, Mail, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,6 +40,7 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { useFirebase } from "@/firebase/provider";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import Link from "next/link";
 
 type ScanTarget = "initial" | "final";
 const ALL_CATEGORIES = ['a', 'b', 'c'];
@@ -92,24 +93,20 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Falha ao carregar a sessão do localStorage", error);
-      // Clear broken data
       localStorage.removeItem("stock-counter-session");
     }
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   // Save session to localStorage whenever it changes
   useEffect(() => {
     try {
-      // Don't save if there's nothing to save (initial state)
       if (Object.keys(savedCounts).length === 0 && !agencyNumber && !agencyName) {
-        // Also check if there is something in localStorage to remove it
         if (localStorage.getItem("stock-counter-session")) {
             localStorage.removeItem("stock-counter-session");
         }
         return;
       }
       
-      // Convert BigInts in savedCounts to strings for serialization
       const savedCountsStr: Record<string, string> = {};
       for (const key in savedCounts) {
         savedCountsStr[key] = savedCounts[key].toString();
@@ -143,7 +140,6 @@ export default function Home() {
 
     if (scanningFor === "initial") {
       setInitialCode(sanitizedResult);
-      // Reset final code and count if initial is re-scanned
       setFinalCode(null);
       setCount(0n);
     } else if (scanningFor === "final") {
@@ -211,7 +207,6 @@ export default function Home() {
         ...prevPairs,
         [category]: [...(prevPairs[category] || []), { initial: initialCode, final: finalCode }]
       }));
-      // Reset for next count
       resetAll();
     }
   };
@@ -226,7 +221,6 @@ export default function Home() {
     setAgencyName(null);
     setReportDate(null);
     
-    // Simulate a short delay for user experience
     await new Promise(resolve => setTimeout(resolve, 300));
 
     const agency = agencies.find(a => a.id === parseInt(agencyNumber, 10));
@@ -260,16 +254,14 @@ export default function Home() {
     }
 
     try {
-      // Temporarily set background to white for capture
       reportRef.current.style.backgroundColor = 'white';
       reportRef.current.style.color = 'black';
 
       const canvas = await html2canvas(reportRef.current, {
         useCORS: true,
-        scale: 2, // a good balance for quality and size
+        scale: 3,
       });
 
-      // Revert styles
       reportRef.current.style.backgroundColor = '';
       reportRef.current.style.color = '';
       
@@ -296,10 +288,8 @@ export default function Home() {
             });
           } catch (shareError) {
             console.log("Compartilhamento cancelado ou falhou", shareError);
-            // Do not show a toast if user cancels
           }
         } else {
-            // Fallback for browsers that don't support sharing files
             const link = document.createElement('a');
             link.href = URL.createObjectURL(pdfBlob);
             link.download = fileName;
@@ -342,66 +332,6 @@ export default function Home() {
     }
 
     try {
-      // Temporarily set background to white for capture
-      reportRef.current.style.backgroundColor = 'white';
-      reportRef.current.style.color = 'black';
-
-      const canvas = await html2canvas(reportRef.current, {
-        useCORS: true,
-        scale: 3,
-      });
-
-      // Revert styles
-      reportRef.current.style.backgroundColor = '';
-      reportRef.current.style.color = '';
-
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-            toast({
-                title: "Erro ao gerar imagem",
-                description: "Não foi possível criar o arquivo de imagem.",
-                variant: "destructive",
-            });
-            return;
-        }
-
-        const file = new File([blob], "relatorio-estoque.png", { type: "image/png" });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: 'Relatório de Contagem de Estoque',
-              text: `Aqui está o relatório de contagem para ${agencyName} em ${reportDate}.`,
-            });
-          } catch (shareError) {
-            console.log("Compartilhamento cancelado ou falhou", shareError);
-            // Do not show a toast if user cancels
-          }
-        } else {
-            // Fallback for browsers that don't support sharing files
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'relatorio-estoque.png';
-            link.click();
-            URL.revokeObjectURL(link.href);
-            toast({
-                title: "Imagem Salva",
-                description: "O relatório foi baixado como uma imagem PNG.",
-            });
-        }
-      }, 'image/png');
-
-    } catch (error) {
-      console.error("Falha no compartilhamento:", error);
-      toast({
-        title: "Falha no Compartilhamento",
-        description: "Não foi possível compartilhar a imagem do relatório.",
-        variant: "destructive",
-      });
-    } finally {
-        
-        // Convert BigInts to strings for Firestore
         const countsAsString = Object.entries(savedCounts).reduce((acc, [key, value]) => {
           acc[key] = value.toString();
           return acc;
@@ -409,7 +339,7 @@ export default function Home() {
       
         try {
           const reportsRef = collection(firestore, "reports");
-          await addDoc(reportsRef, {
+          addDoc(reportsRef, {
             agencyNumber,
             agencyName,
             reportDate: reportDate,
@@ -420,8 +350,8 @@ export default function Home() {
           });
       
           toast({
-            title: "Relatório Salvo e Sessão Finalizada!",
-            description: "O relatório foi salvo no banco de dados e a sessão foi limpa.",
+            title: "Relatório Salvo!",
+            description: "O relatório foi salvo no banco de dados.",
           });
       
         } catch (error) {
@@ -434,6 +364,8 @@ export default function Home() {
         }
       
         clearSession();
+    } catch (error) {
+      console.error("Falha ao finalizar:", error);
     }
   };
   
@@ -461,13 +393,19 @@ export default function Home() {
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background">
+    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background text-foreground">
       <div className="w-full max-w-5xl space-y-4">
         <header className="text-center py-4 relative">
           <h1 className="text-5xl font-bold tracking-tight text-primary">
             countSKP
           </h1>
-          <div className="absolute top-0 right-0">
+          <div className="absolute top-0 right-0 flex gap-2">
+             <Button variant="outline" size="icon" asChild>
+                <Link href="/reports">
+                  <History className="h-5 w-5" />
+                  <span className="sr-only">Histórico</span>
+                </Link>
+             </Button>
              <Button variant="outline" size="icon" onClick={() => setIsClearAlertOpen(true)}>
                 <Eraser className="h-5 w-5" />
                 <span className="sr-only">Limpar Sessão</span>
@@ -703,7 +641,7 @@ export default function Home() {
                         <Mail className="mr-2 h-5 w-5" /> Enviar
                     </Button>
                     <Button onClick={handleShareAndFinalize} className="w-full" size="lg" variant="default">
-                        <Save className="mr-2 h-5 w-5" /> Salvar
+                        <Save className="mr-2 h-4 w-4" /> Salvar
                     </Button>
                 </div>
               </div>
