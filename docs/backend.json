@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "report": {
@@ -56,7 +57,7 @@
       "schema": {
         "$ref": "#/backend/entities/report"
       },
-      "description": "Collection of saved reports."
+      "description": "Collection of saved reports shared across all devices."
     }
   }
 }
