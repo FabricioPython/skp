@@ -102,7 +102,7 @@ export default function ReportsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-lg font-bold animate-pulse">Carregando...</p>
+        <p className="text-2xl font-black italic uppercase text-primary animate-pulse">Carregando Histórico...</p>
       </div>
     );
   }
@@ -112,61 +112,61 @@ export default function ReportsPage() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background">
       <div className="w-full max-w-4xl space-y-6">
-        <header className="flex items-center justify-between py-6 border-b">
-          <Button variant="ghost" asChild>
+        <header className="flex items-center justify-between py-6 border-b border-white/10">
+          <Button variant="ghost" asChild className="text-white/60 hover:text-primary">
             <Link href="/" className="flex items-center gap-2">
               <ChevronLeft className="h-4 w-4" /> Voltar
             </Link>
           </Button>
-          <h1 className="text-2xl font-bold text-primary uppercase">Histórico</h1>
+          <h1 className="text-3xl font-black italic uppercase text-primary tracking-tighter">Histórico</h1>
           <div className="w-20"></div>
         </header>
 
         {!reports || reports.length === 0 ? (
-          <div className="text-center py-20 bg-card rounded-lg border">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Nenhum relatório salvo.</p>
+          <div className="text-center py-20 bg-card/50 rounded-xl border border-white/5">
+            <FileText className="h-16 w-16 mx-auto text-white/20 mb-4" />
+            <p className="text-white/40 font-bold uppercase">Nenhum relatório salvo no sistema.</p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-6">
             {reports.map((report) => (
-              <Card key={report.id} className="hover:border-primary transition-colors">
-                <CardHeader className="pb-2">
+              <Card key={report.id} className="bg-card/50 border-white/5 hover:border-primary/50 transition-all group">
+                <CardHeader className="pb-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-lg font-bold uppercase">
+                      <CardTitle className="text-2xl font-black italic uppercase tracking-tighter group-hover:text-primary transition-colors">
                         {report.agencyName}
                       </CardTitle>
-                      <CardDescription className="flex items-center gap-2">
+                      <CardDescription className="flex items-center gap-2 text-white/60 font-bold">
                         <Calendar className="h-3 w-3" />
                         {report.reportDate} | Ag. {report.agencyNumber}
                       </CardDescription>
                     </div>
                     <div className="text-right">
-                      <div className="text-xl font-bold text-primary">
+                      <div className="text-3xl font-black italic text-primary">
                         {report.grandTotal}
                       </div>
-                      <span className="text-[10px] font-bold uppercase text-muted-foreground">Total</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Total Geral</span>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
+                  <div className="grid grid-cols-3 gap-4">
                     {['a', 'b', 'c'].map((cat) => (
-                      <div key={cat} className="bg-secondary/20 p-2 rounded text-center">
-                        <span className="text-[10px] font-bold block uppercase text-muted-foreground">{cat}</span>
-                        <span className="font-bold">{report.savedCounts[cat] || "0"}</span>
+                      <div key={cat} className="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
+                        <span className="text-[10px] font-black block uppercase tracking-widest text-primary mb-1">{cat}</span>
+                        <span className="text-xl font-mono font-bold">{report.savedCounts[cat] || "0"}</span>
                       </div>
                     ))}
                   </div>
                 </CardContent>
-                <CardFooter className="border-t pt-4">
+                <CardFooter className="border-t border-white/5 pt-4">
                   <Button 
                     variant="outline" 
-                    className="w-full" 
+                    className="w-full border-primary/20 hover:bg-primary hover:text-background font-black uppercase italic" 
                     onClick={() => handleOpenSequences(report)}
                   >
-                    <ListTree className="mr-2 h-4 w-4" /> Sequências
+                    <ListTree className="mr-2 h-4 w-4" /> Ver Sequências
                   </Button>
                 </CardFooter>
               </Card>
@@ -176,57 +176,63 @@ export default function ReportsPage() {
       </div>
 
       <Dialog open={!!selectedReport} onOpenChange={(open) => !open && setSelectedReport(null)}>
-        <DialogContent className="sm:max-w-[450px]">
+        <DialogContent className="sm:max-w-[450px] bg-card border-primary">
           <DialogHeader>
-            <DialogTitle>Sequências do Relatório</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-2xl font-black italic uppercase">Sequências do Relatório</DialogTitle>
+            <DialogDescription className="text-white/60">
               Intervalos lidos para a agência {selectedReport?.agencyName}.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Selecione a Categoria</Label>
+              <Label className="text-xs font-black uppercase text-primary tracking-widest">Filtrar por Categoria</Label>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-white/10 font-bold uppercase italic">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="a">Categoria A</SelectItem>
-                  <SelectItem value="b">Categoria B</SelectItem>
-                  <SelectItem value="c">Categoria C</SelectItem>
+                <SelectContent className="bg-card border-primary">
+                  <SelectItem value="a" className="font-bold uppercase italic">Categoria A</SelectItem>
+                  <SelectItem value="b" className="font-bold uppercase italic">Categoria B</SelectItem>
+                  <SelectItem value="c" className="font-bold uppercase italic">Categoria C</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <ScrollArea className="h-[300px] w-full rounded border p-2">
+            <ScrollArea className="h-[350px] w-full rounded-xl border border-white/10 p-4 bg-black/20">
               {currentSequences.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-                  <Calculator className="h-8 w-8 mb-2" />
-                  <p>Nenhuma sequência</p>
+                <div className="flex flex-col items-center justify-center py-20 text-white/20">
+                  <Calculator className="h-12 w-12 mb-2" />
+                  <p className="font-bold uppercase">Nenhum dado lido</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {currentSequences.map((pair, idx) => {
                     const diff = BigInt(pair.final) - BigInt(pair.initial) + 1n;
                     return (
-                      <div key={idx} className="bg-muted/30 p-3 rounded border space-y-2">
-                        <div className="flex items-center justify-between text-xs font-bold">
-                          <span className="uppercase text-primary">Item {idx + 1}</span>
-                          <span className="bg-primary text-primary-foreground px-2 rounded">{diff.toString()} ITENS</span>
+                      <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-4 hover:border-primary/30 transition-all">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-primary">Item {idx + 1}</span>
+                          <span className="bg-primary text-background px-3 py-1 rounded-full text-[10px] font-black uppercase italic">{diff.toString()} ITENS</span>
                         </div>
-                        <div className="flex items-center justify-between font-mono text-sm">
-                          <span>{pair.initial}</span>
-                          <ArrowRight className="h-3 w-3" />
-                          <span>{pair.final}</span>
+                        <div className="flex items-center justify-between font-mono text-lg font-bold text-white/90">
+                          <div className="flex flex-col items-center">
+                             <span className="text-[8px] uppercase text-white/40 mb-1">Início</span>
+                             <span>{pair.initial}</span>
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-primary" />
+                          <div className="flex flex-col items-center">
+                             <span className="text-[8px] uppercase text-white/40 mb-1">Fim</span>
+                             <span>{pair.final}</span>
+                          </div>
                         </div>
                         <Button 
                           variant="secondary" 
                           size="sm" 
-                          className="w-full h-8 text-xs"
+                          className="w-full h-10 text-xs font-black uppercase italic bg-white/10 hover:bg-primary hover:text-background"
                           onClick={() => handleCopySequenceList(pair.initial, pair.final)}
                         >
-                          <Copy className="h-3 w-3 mr-2" /> Copiar Lista
+                          <Copy className="h-3 w-3 mr-2" /> Copiar Lista Completa
                         </Button>
                       </div>
                     );
@@ -236,7 +242,7 @@ export default function ReportsPage() {
             </ScrollArea>
           </div>
           
-          <Button variant="ghost" onClick={() => setSelectedReport(null)} className="w-full">
+          <Button variant="ghost" onClick={() => setSelectedReport(null)} className="w-full text-white/40 hover:text-white">
             Fechar
           </Button>
         </DialogContent>
@@ -244,3 +250,4 @@ export default function ReportsPage() {
     </main>
   );
 }
+

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, PlusCircle, Eraser, Save, Mail, History } from "lucide-react";
+import { Camera, RefreshCcw, Calculator, Archive, Search, FileText, PlusCircle, Eraser, Save, Mail, History, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -221,11 +221,15 @@ export default function Home() {
       return;
     }
     try {
+      // Temporary styling for capture to match PDF best practices (white background, black text)
+      const originalStyle = reportRef.current.style.cssText;
       reportRef.current.style.backgroundColor = 'white';
       reportRef.current.style.color = 'black';
+      
       const canvas = await html2canvas(reportRef.current, { useCORS: true, scale: 2 });
-      reportRef.current.style.backgroundColor = '';
-      reportRef.current.style.color = '';
+      
+      // Restore original style
+      reportRef.current.style.cssText = originalStyle;
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ orientation: 'p', unit: 'px', format: [canvas.width, canvas.height] });
@@ -244,9 +248,11 @@ export default function Home() {
         link.download = fileName;
         link.click();
         URL.revokeObjectURL(link.href);
+        toast({ title: "Download Iniciado", description: "O PDF foi gerado e baixado." });
       }
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
+      toast({ title: "Erro", description: "Falha ao gerar o relatório em PDF.", variant: "destructive" });
     }
   };
 
@@ -272,6 +278,7 @@ export default function Home() {
         clearSession();
     } catch (error) {
       console.error("Error saving report: ", error);
+      toast({ title: "Erro", description: "Não foi possível salvar no Firebase.", variant: "destructive" });
     }
   };
   
@@ -294,14 +301,14 @@ export default function Home() {
   const grandTotal = Object.values(savedCounts).reduce((acc, current) => acc + current, 0n);
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background text-foreground">
+    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8">
       <div className="w-full max-w-5xl space-y-6">
-        <header className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-b">
-          <h1 className="text-3xl font-bold tracking-tight text-primary">
+        <header className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-b border-white/10">
+          <h1 className="text-4xl font-black tracking-tighter text-primary italic uppercase">
             countSKP
           </h1>
           <div className="flex gap-2">
-             <Button variant="outline" asChild>
+             <Button variant="outline" asChild className="border-primary/50 text-foreground hover:bg-primary hover:text-primary-foreground transition-all">
                 <Link href="/reports">
                   <History className="mr-2 h-4 w-4" /> Histórico
                 </Link>
@@ -321,42 +328,46 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <Card>
+            <Card className="bg-card/50 backdrop-blur border-white/5">
               <CardHeader>
-                <CardTitle>Entrada Manual</CardTitle>
-                <CardDescription>Escaneie ou digite as sequências.</CardDescription>
+                <CardTitle className="text-xl font-bold uppercase tracking-wider text-muted">Entrada Manual</CardTitle>
+                <CardDescription className="text-white/60">Escaneie ou digite as sequências.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Código Inicial</Label>
+                  <Label className="text-xs uppercase font-bold text-muted">Código Inicial</Label>
                   <div className="flex gap-2">
                     <Input
                       type="text"
+                      inputMode="numeric"
                       value={initialCode || ""}
                       onChange={(e) => {
                         setInitialCode(e.target.value.replace(/[\D\t]/g, ''));
                         setCount(0n);
                       }}
-                      placeholder="Código inicial"
+                      className="bg-background/50 border-white/20 text-lg font-mono focus:border-primary"
+                      placeholder="000000000"
                     />
-                    <Button variant="secondary" size="icon" onClick={() => setScanningFor("initial")}>
+                    <Button variant="secondary" size="icon" onClick={() => setScanningFor("initial")} className="bg-muted hover:bg-primary text-background">
                       <Camera className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Código Final</Label>
+                  <Label className="text-xs uppercase font-bold text-muted">Código Final</Label>
                   <div className="flex gap-2">
                     <Input
                       type="text"
+                      inputMode="numeric"
                       value={finalCode || ""}
                       onChange={(e) => {
                         setFinalCode(e.target.value.replace(/[\D\t]/g, ''));
                         setCount(0n);
                       }}
-                      placeholder="Código final"
+                      className="bg-background/50 border-white/20 text-lg font-mono focus:border-primary"
+                      placeholder="000000000"
                     />
-                    <Button variant="secondary" size="icon" onClick={() => setScanningFor("final")} disabled={!initialCode}>
+                    <Button variant="secondary" size="icon" onClick={() => setScanningFor("final")} disabled={!initialCode} className="bg-muted hover:bg-primary text-background">
                       <Camera className="h-4 w-4" />
                     </Button>
                   </div>
@@ -364,44 +375,44 @@ export default function Home() {
               </CardContent>
               <CardFooter className="flex-col gap-2">
                  <Button
-                  className="w-full"
+                  className="w-full text-lg font-black uppercase italic"
                   onClick={handleCount}
                   disabled={!initialCode || !finalCode}
                 >
-                  <Calculator className="mr-2 h-4 w-4" /> Calcular
+                  <Calculator className="mr-2 h-5 w-5" /> Calcular
                 </Button>
                 {(initialCode || finalCode) && (
-                  <Button variant="ghost" onClick={resetAll} className="w-full">
+                  <Button variant="ghost" onClick={resetAll} className="w-full text-white/40 hover:text-white">
                     <RefreshCcw className="mr-2 h-4 w-4" /> Resetar
                   </Button>
                 )}
               </CardFooter>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Resultado</CardTitle>
+            <Card className="bg-card/50 backdrop-blur border-white/5 overflow-hidden">
+              <CardHeader className="bg-primary/5 pb-2">
+                <CardTitle className="text-xl font-bold uppercase tracking-wider text-primary">Resultado</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="text-center py-6 bg-secondary/20 rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground uppercase">Itens</p>
-                  <p className="text-6xl font-bold">{count.toString()}</p>
+              <CardContent className="space-y-6 pt-6">
+                <div className="text-center py-8 bg-black/40 rounded-xl border border-white/5">
+                  <p className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-2">Total de Itens</p>
+                  <p className="text-7xl font-black italic tracking-tighter text-white">{count.toString()}</p>
                 </div>
                 <div>
-                  <Label className="mb-2 block text-center">Categoria</Label>
-                  <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-4">
+                  <Label className="mb-4 block text-center text-xs font-bold uppercase text-muted">Selecione a Categoria</Label>
+                  <RadioGroup onValueChange={setCategory} value={category || ""} className="flex justify-center gap-6">
                     {ALL_CATEGORIES.map(cat => (
-                      <div key={cat} className="flex items-center space-x-2">
-                        <RadioGroupItem value={cat} id={`cat-${cat}`} />
-                        <Label htmlFor={`cat-${cat}`} className="text-lg uppercase">{cat}</Label>
+                      <div key={cat} className="flex flex-col items-center gap-2">
+                        <RadioGroupItem value={cat} id={`cat-${cat}`} className="w-6 h-6 border-2" />
+                        <Label htmlFor={`cat-${cat}`} className="text-xl font-black uppercase italic">{cat}</Label>
                       </div>
                     ))}
                   </RadioGroup>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button className="w-full" onClick={handleSave} disabled={!category || count <= 0n}>
-                  <Save className="mr-2 h-4 w-4" /> Adicionar
+              <CardFooter className="pt-2">
+                <Button className="w-full h-14 text-xl font-black uppercase italic" onClick={handleSave} disabled={!category || count <= 0n}>
+                  <Save className="mr-2 h-6 w-6" /> Adicionar à Pilha
                 </Button>
               </CardFooter>
             </Card>
@@ -409,92 +420,101 @@ export default function Home() {
           
           <div className="space-y-6">
              {Object.keys(savedCounts).length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Archive className="h-5 w-5" />
-                    Resumo
+              <Card className="bg-card text-foreground border-white/10 shadow-2xl">
+                <CardHeader className="border-b border-white/5">
+                  <CardTitle className="flex items-center gap-2 text-xl font-black italic uppercase">
+                    <Archive className="h-6 w-6 text-primary" />
+                    Resumo Consolidado
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-3 pt-6">
                    {ALL_CATEGORIES.map((cat) => (
-                    <div key={cat} className="flex justify-between items-center p-2 bg-secondary/10 rounded">
-                      <span className="font-bold uppercase">Cat {cat}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold">{(savedCounts[cat] || 0n).toString()}</span>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleIncrementClick(cat)}>
-                          <PlusCircle className="h-4 w-4" />
+                    <div key={cat} className="flex justify-between items-center p-4 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/5">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Categoria</span>
+                        <span className="text-2xl font-black italic uppercase">{cat}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-3xl font-mono font-bold">{(savedCounts[cat] || 0n).toString()}</span>
+                        <Button variant="secondary" size="icon" className="h-10 w-10 bg-white/10 hover:bg-primary hover:text-background" onClick={() => handleIncrementClick(cat)}>
+                          <PlusCircle className="h-5 w-5" />
                         </Button>
                       </div>
                     </div>
                   ))}
-                  <div className="flex justify-between items-center p-3 mt-4 bg-primary text-primary-foreground rounded-lg">
-                    <span className="font-bold uppercase">Total</span>
-                    <span className="text-2xl font-bold">{grandTotal.toString()}</span>
+                  <div className="flex justify-between items-center p-6 mt-4 bg-primary text-background rounded-xl shadow-[0_0_20px_rgba(214,255,0,0.3)]">
+                    <span className="text-lg font-black uppercase italic tracking-tighter">Total Geral</span>
+                    <span className="text-4xl font-black italic">{grandTotal.toString()}</span>
                   </div>
                 </CardContent>
               </Card>
             )}
 
             {Object.keys(savedCounts).length > 0 && (
-              <Card>
+              <Card className="bg-card/50 border-white/5">
                 <CardHeader>
-                  <CardTitle>Agência</CardTitle>
+                  <CardTitle className="text-sm font-bold uppercase text-muted">Vincular Agência</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-2">
                     <Input
                       type="number"
-                      placeholder="Número da agência"
+                      placeholder="ID Agência"
                       value={agencyNumber}
                       onChange={(e) => setAgencyNumber(e.target.value)}
                       disabled={isFetchingAgency}
+                      className="bg-background border-white/10 text-lg font-bold"
                     />
-                    <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber} size="icon">
-                      <Search className="h-4 w-4" />
+                    <Button onClick={handleFetchAgency} disabled={isFetchingAgency || !agencyNumber} className="bg-muted hover:bg-primary text-background px-6">
+                      <Search className="h-5 w-5" />
                     </Button>
                   </div>
-                  {isFetchingAgency && <p className="text-xs text-primary mt-2">Buscando...</p>}
+                  {isFetchingAgency && <p className="text-xs text-primary mt-2 animate-pulse">Buscando no sistema...</p>}
                   {agencyError && <p className="text-xs text-destructive mt-2">{agencyError}</p>}
                 </CardContent>
               </Card>
             )}
 
             {agencyName && reportDate && (
-              <div className="space-y-4">
-                <Card ref={reportRef} className="bg-white text-black border-2">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl font-bold uppercase">
-                      <FileText className="h-6 w-6" />
-                      Relatório
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between text-sm">
-                      <span><strong>Agência:</strong> {agencyName}</span>
-                      <span><strong>Data:</strong> {reportDate}</span>
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-5">
+                <div ref={reportRef} className="bg-white text-black p-8 rounded-xl border-4 border-black space-y-6 shadow-xl">
+                    <div className="flex justify-between items-start border-b-4 border-black pb-4">
+                      <div>
+                        <h2 className="text-5xl font-black italic uppercase tracking-tighter leading-none mb-1">RELATÓRIO</h2>
+                        <p className="text-xl font-bold uppercase">{agencyName}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-black uppercase">DATA</p>
+                        <p className="text-xl font-mono font-bold leading-none">{reportDate}</p>
+                      </div>
                     </div>
-                    <Separator className="bg-black/10" />
-                    <div className="space-y-2">
+
+                    <div className="grid grid-cols-1 gap-2">
                         {ALL_CATEGORIES.map((cat) => (
-                          <div key={cat} className="flex justify-between">
-                            <span className="uppercase">Cat {cat}:</span>
-                            <span className="font-bold">{(savedCounts[cat] || 0n).toString()}</span>
+                          <div key={cat} className="flex justify-between items-center py-2 border-b-2 border-black/10">
+                            <span className="text-2xl font-black uppercase italic">CAT {cat}</span>
+                            <span className="text-3xl font-mono font-bold">{(savedCounts[cat] || 0n).toString()}</span>
                           </div>
                         ))}
                     </div>
-                    <div className="flex justify-between p-2 bg-black text-white rounded">
-                      <span className="font-bold uppercase">Total Geral</span>
-                      <span className="font-bold">{grandTotal.toString()}</span>
+
+                    <div className="flex justify-between items-center p-4 bg-black text-white rounded-lg">
+                      <span className="text-2xl font-black italic uppercase">TOTAL GERAL</span>
+                      <span className="text-4xl font-black italic">{grandTotal.toString()}</span>
                     </div>
-                  </CardContent>
-                </Card>
-                <div className="flex gap-2">
-                    <Button onClick={handleSendEmail} className="flex-1" variant="outline">
-                        <Mail className="mr-2 h-4 w-4" /> Enviar
+
+                    <div className="pt-4 border-t-2 border-black space-y-1">
+                      <p className="text-[10px] font-bold text-center uppercase text-black/50">countSKP - Sistema Digital de Contagem de Estoque</p>
+                      <p className="text-[10px] font-bold text-center uppercase text-black/50">Agência ID: {agencyNumber}</p>
+                    </div>
+                </div>
+                
+                <div className="flex gap-4">
+                    <Button onClick={handleSendEmail} className="flex-1 h-14 bg-white hover:bg-white/90 text-black text-lg font-black uppercase italic border-4 border-black shadow-[4px_4px_0px_white]">
+                        <Mail className="mr-2 h-6 w-6" /> Enviar
                     </Button>
-                    <Button onClick={handleShareAndFinalize} className="flex-1">
-                        <Save className="mr-2 h-4 w-4" /> Salvar
+                    <Button onClick={handleShareAndFinalize} className="flex-1 h-14 text-lg font-black uppercase italic shadow-[4px_4px_0px_#D6FF00]">
+                        <Save className="mr-2 h-6 w-6" /> Salvar
                     </Button>
                 </div>
               </div>
@@ -504,46 +524,46 @@ export default function Home() {
       </div>
 
       <Dialog open={!!scanningFor} onOpenChange={(open) => !open && setScanningFor(null)}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-background border-primary">
           <DialogHeader>
-            <DialogTitle>Scanner {scanningFor === 'initial' ? 'Inicial' : 'Final'}</DialogTitle>
+            <DialogTitle className="text-xl font-black uppercase italic">Scanner {scanningFor === 'initial' ? 'Inicial' : 'Final'}</DialogTitle>
           </DialogHeader>
-          <div className="relative overflow-hidden rounded-lg bg-black aspect-square">
+          <div className="relative overflow-hidden rounded-xl bg-black border-2 border-primary/20 aspect-square">
             <BarcodeScanner onScan={handleScan} paused={!scanningFor} />
           </div>
         </DialogContent>
       </Dialog>
       
       <AlertDialog open={isIncrementAlertOpen} onOpenChange={setIsIncrementAlertOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-card border-primary">
           <AlertDialogHeader>
-            <AlertDialogTitle>Adicionar Unidade</AlertDialogTitle>
-            <AlertDialogDescription>
-              Deseja adicionar +1 à categoria {categoryToIncrement?.toUpperCase()}?
+            <AlertDialogTitle className="text-xl font-black uppercase italic">Adicionar Unidade</AlertDialogTitle>
+            <AlertDialogDescription className="text-white">
+              Deseja adicionar +1 à categoria <span className="text-primary font-black uppercase">{categoryToIncrement}</span>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Não</AlertDialogCancel>
+            <AlertDialogCancel className="bg-white/5 border-white/10">Não</AlertDialogCancel>
             <AlertDialogAction onClick={confirmIncrement}>Sim</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-card border-destructive">
           <AlertDialogHeader>
-            <AlertDialogTitle>Limpar Dados</AlertDialogTitle>
-            <AlertDialogDescription>
-              Isso apagará todas as contagens atuais. Continuar?
+            <AlertDialogTitle className="text-xl font-black uppercase italic text-destructive">Limpar Dados</AlertDialogTitle>
+            <AlertDialogDescription className="text-white">
+              Isso apagará todas as contagens atuais do sistema e da memória local. Tem certeza?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="bg-white/5 border-white/10">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { clearSession(); setIsClearAlertOpen(false); }}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Limpar
+              Excluir Tudo
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -551,3 +571,4 @@ export default function Home() {
     </main>
   );
 }
+
