@@ -1,13 +1,10 @@
 
 "use client";
 
-import { useFirebase } from "@/firebase/provider";
-import { useCollection } from "@/firebase/firestore/use-collection";
-import { collection, query, orderBy, Timestamp } from "firebase/firestore";
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight, Copy, FileDown, Cloud, AlertCircle } from "lucide-react";
+import { ChevronLeft, FileText, Calendar, Building2, Calculator, ListTree, ArrowRight, Copy, FileDown, Cloud, AlertCircle, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import {
   Dialog,
@@ -42,25 +39,38 @@ interface Report {
   grandTotal: string;
   savedCounts: Record<string, string>;
   sequencePairs: Record<string, SequencePair[]>;
-  createdAt: Timestamp;
+  createdAt?: string;
 }
 
 export default function ReportsPage() {
-  const { firestore } = useFirebase();
   const { toast } = useToast();
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("a");
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Carrega todos os relatórios do Firestore (Independente do dispositivo)
-  const reportsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, "reports"), orderBy("createdAt", "desc"));
-  }, [firestore]);
+  const fetchReports = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch("/api/reports", { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error("Não foi possível carregar os relatórios do arquivo JSON.");
+      }
+      const data = await res.json();
+      setReports(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      console.error("Erro ao carregar relatórios:", err);
+      setError("Não foi possível carregar o histórico a partir do arquivo JSON.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const { data: reports, loading, error } = useCollection<Report>(reportsQuery as any);
-
-  // Determina se estamos realmente em estado de carregamento inicial
-  const isInitialLoading = loading || !firestore;
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const generateReportPDF = (report: Report) => {
     const doc = new jsPDF();
@@ -209,12 +219,12 @@ export default function ReportsPage() {
     }
   };
 
-  if (isInitialLoading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center space-y-4">
             <Cloud className="h-12 w-12 text-primary mx-auto animate-bounce" />
-            <p className="text-2xl font-black italic uppercase text-primary animate-pulse">Sincronizando Banco Global...</p>
+            <p className="text-2xl font-black italic uppercase text-primary animate-pulse">Carregando Histórico...</p>
         </div>
       </div>
     );
@@ -225,16 +235,19 @@ export default function ReportsPage() {
         <main className="flex min-h-screen flex-col items-center p-8 bg-background">
              <Alert variant="destructive" className="max-w-md">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Erro de Conexão</AlertTitle>
+                <AlertTitle>Erro no Histórico</AlertTitle>
                 <AlertDescription>
-                    Não foi possível carregar o histórico. Verifique sua conexão ou se o Firebase está configurado.
+                    {error}
                 </AlertDescription>
             </Alert>
-            <Button asChild className="mt-4">
+            <div className="flex gap-4 mt-4">
+              <Button onClick={fetchReports}>Tentar Novamente</Button>
+              <Button variant="outline" asChild>
                 <Link href="/">Voltar ao Início</Link>
-            </Button>
+              </Button>
+            </div>
         </main>
-    )
+    );
   }
 
   const currentSequences = selectedReport?.sequencePairs?.[selectedCategory] || [];
@@ -249,18 +262,20 @@ export default function ReportsPage() {
             </Link>
           </Button>
           <div className="text-center">
-            <h1 className="text-3xl font-black italic uppercase text-primary tracking-tighter">Histórico Global</h1>
+            <h1 className="text-3xl font-black italic uppercase text-primary tracking-tighter">Histórico de Relatórios</h1>
             <p className="flex items-center justify-center gap-2 text-[10px] text-white/40 uppercase font-bold tracking-widest mt-1">
-              <Cloud className="h-3 w-3" /> Base de Dados Centralizada
+              <Cloud className="h-3 w-3" /> Base de Dados em Arquivo JSON
             </p>
           </div>
-          <div className="hidden sm:block w-20"></div>
+          <Button variant="outline" size="sm" onClick={fetchReports} className="border-white/10 text-white/70 hover:text-primary">
+            <RefreshCcw className="h-3.5 w-3.5 mr-1" /> Atualizar
+          </Button>
         </header>
 
         {!reports || reports.length === 0 ? (
           <div className="text-center py-20 bg-card/50 rounded-xl border border-white/5">
             <FileText className="h-16 w-16 mx-auto text-white/20 mb-4" />
-            <p className="text-white/40 font-bold uppercase">Nenhum relatório encontrado na nuvem.</p>
+            <p className="text-white/40 font-bold uppercase">Nenhum relatório encontrado no arquivo de histórico.</p>
           </div>
         ) : (
           <div className="grid gap-6">

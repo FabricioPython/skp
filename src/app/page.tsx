@@ -35,8 +35,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { agencies } from "@/lib/agencies";
 import { useToast } from "@/hooks/use-toast";
-import { useFirebase } from "@/firebase/provider";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 
 type ScanTarget = "initial" | "final";
@@ -66,7 +64,7 @@ export default function Home() {
 
   const reportRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { firestore } = useFirebase();
+  const [isSaving, setIsSaving] = useState(false);
 
   // Carrega a sessão local ao iniciar
   useEffect(() => {
@@ -217,38 +215,61 @@ export default function Home() {
     setIsFetchingAgency(false);
   };
 
-  const handleShareAndFinalize = () => {
-    if (!agencyName || !firestore || grandTotal === 0n) return;
+  const handleShareAndFinalize = async () => {
+    if (!agencyName || grandTotal === 0n) {
+      toast({
+        title: "Atenção",
+        description: "Preencha a agência e realize ao menos uma contagem antes de salvar.",
+        variant: "destructive",
+      });
+      return;
+    }
     
+    setIsSaving(true);
+
     const countsAsString = Object.entries(savedCounts).reduce((acc, [key, value]) => {
       acc[key] = value.toString();
       return acc;
     }, {} as Record<string, string>);
   
-    const reportsRef = collection(firestore, "reports");
     const reportData = {
       agencyNumber,
       agencyName,
-      reportDate: reportDate,
+      reportDate: reportDate || new Date().toLocaleDateString("pt-BR"),
       savedCounts: countsAsString,
       sequencePairs: sequencePairs,
       grandTotal: grandTotal.toString(),
-      createdAt: serverTimestamp(),
     };
 
-    addDoc(reportsRef, reportData)
-      .then(() => {
-        toast({ title: "Relatório Salvo!", description: "A página será reiniciada." });
-        clearSession();
-        // Recarrega a página após um curto delay para permitir que o usuário veja o toast
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      })
-      .catch((err) => {
-        console.error("Erro ao salvar relatório: ", err);
-        toast({ title: "Erro", description: "Não foi possível salvar os dados.", variant: "destructive" });
+    try {
+      const response = await fetch("/api/reports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reportData),
       });
+
+      if (!response.ok) {
+        throw new Error("Falha ao salvar relatório no servidor.");
+      }
+
+      toast({
+        title: "Relatório Salvo com Sucesso!",
+        description: "Os dados foram salvos no histórico em arquivo JSON.",
+      });
+
+      clearSession();
+    } catch (err) {
+      console.error("Erro ao salvar relatório: ", err);
+      toast({
+        title: "Erro ao Salvar",
+        description: "Não foi possível gravar o relatório no histórico.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const handleIncrementClick = (cat: string) => {
@@ -479,8 +500,8 @@ export default function Home() {
                 </div>
                 
                 <div className="flex gap-4">
-                    <Button onClick={handleShareAndFinalize} className="w-full h-14 text-lg font-black uppercase italic shadow-[4px_4px_0px_#D6FF00]">
-                        <Save className="mr-2 h-6 w-6" /> Salvar
+                    <Button onClick={handleShareAndFinalize} disabled={isSaving} className="w-full h-14 text-lg font-black uppercase italic shadow-[4px_4px_0px_#D6FF00]">
+                        <Save className="mr-2 h-6 w-6" /> {isSaving ? "Salvando..." : "Salvar"}
                     </Button>
                 </div>
               </div>
