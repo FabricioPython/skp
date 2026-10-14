@@ -1,68 +1,37 @@
 import { NextResponse } from "next/server";
-import path from "path";
-import fs from "fs/promises";
-import os from "os";
+import { connectToDatabase } from "@/lib/mongodb";
+import { Report } from "@/models/Report";
 
-// Cache em memória para suportar ambientes com sistema de arquivos somente leitura (como Cloud Run)
-let memoryReports: any[] | null = null;
-
-function getDataPaths(): string[] {
-  return [
-    path.join(process.cwd(), "data", "reports.json"),
-    path.join(os.tmpdir(), "skp-reports.json"),
-  ];
-}
-
-async function getReportsFromFile(): Promise<{ reports: any[]; usedPath: string | null }> {
-  const paths = getDataPaths();
-  
-  for (const filePath of paths) {
-    try {
-      await fs.access(filePath);
-      const content = await fs.readFile(filePath, "utf-8");
-      if (content.trim()) {
-        const parsed = JSON.parse(content);
-        if (Array.isArray(parsed)) {
-          memoryReports = parsed;
-          return { reports: parsed, usedPath: filePath };
-        }
-      }
-    } catch {
-      // Tenta o próximo caminho disponível
-    }
-  }
-
-  // Se já houver relatórios em memória, retorna
-  if (memoryReports !== null) {
-    return { reports: memoryReports, usedPath: null };
-  }
-
-  return { reports: [], usedPath: null };
-}
-
-async function saveReportsToFile(reports: any[]): Promise<boolean> {
-  memoryReports = reports;
-  const paths = getDataPaths();
-
-  for (const filePath of paths) {
-    try {
-      const dir = path.dirname(filePath);
-      await fs.mkdir(dir, { recursive: true });
-      await fs.writeFile(filePath, JSON.stringify(reports, null, 2), "utf-8");
-      return true;
-    } catch (err) {
-      console.warn(`Não foi possível salvar em ${filePath}:`, err);
-      // Continua para tentar o próximo caminho (ex: diretório temporário)
-    }
-  }
-
-  return false;
-}
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const { reports } = await getReportsFromFile();
-    return NextResponse.json(reports, {
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        {
+          error:
+            "Configuração pendente: Variável MONGODB_URI não encontrada. Configure seu MongoDB no arquivo .env.local ou nas variáveis do servidor.",
+        },
+        { status: 503 }
+      );
+    }
+
+    await connectToDatabase();
+
+    const reports = await Report.find().sort({ createdAt: -1 }).lean();
+
+    const formattedReports = reports.map((doc: any) => ({
+      id: doc._id.toString(),
+      agencyNumber: doc.agencyNumber || "",
+      agencyName: doc.agencyName,
+      reportDate: doc.reportDate,
+      savedCounts: doc.savedCounts || {},
+      sequencePairs: doc.sequencePairs || {},
+      grandTotal: doc.grandTotal,
+      createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : new Date().toISOString(),
+    }));
+
+    return NextResponse.json(formattedReports, {
       headers: {
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
         Pragma: "no-cache",
@@ -70,9 +39,11 @@ export async function GET() {
       },
     });
   } catch (error: any) {
-    console.error("Erro na rota GET /api/reports:", error);
+    console.error("Erro ao buscar relatórios no MongoDB:", error);
     return NextResponse.json(
-      { error: `Erro ao carregar relatórios: ${error?.message || "Falha desconhecida"}` },
+      {
+        error: `Erro ao conectar ou buscar relatórios no MongoDB: ${error?.message || "Falha desconhecida"}`,
+      },
       { status: 500 }
     );
   }
@@ -80,6 +51,16 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        {
+          error:
+            "Configuração pendente: Variável MONGODB_URI não encontrada. Configure a URL de conexão do MongoDB no .env.local.",
+        },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const {
       agencyNumber,
@@ -92,32 +73,40 @@ export async function POST(request: Request) {
 
     if (!agencyName || grandTotal === undefined) {
       return NextResponse.json(
-        { error: "Dados incompletos para salvar o relatório. Informe a agência e os totais." },
+        { error: "Dados incompletos. Informe o nome da agência e o total geral." },
         { status: 400 }
       );
     }
 
-    const newReport = {
-      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    await connectToDatabase();
+
+    const newReport = await Report.create({
       agencyNumber: agencyNumber || "",
       agencyName,
       reportDate: reportDate || new Date().toLocaleDateString("pt-BR"),
       savedCounts: savedCounts || {},
       sequencePairs: sequencePairs || {},
       grandTotal: grandTotal.toString(),
-      createdAt: new Date().toISOString(),
+    });
+
+    const formatted = {
+      id: newReport._id.toString(),
+      agencyNumber: newReport.agencyNumber,
+      agencyName: newReport.agencyName,
+      reportDate: newReport.reportDate,
+      savedCounts: newReport.savedCounts,
+      sequencePairs: newReport.sequencePairs,
+      grandTotal: newReport.grandTotal,
+      createdAt: newReport.createdAt ? new Date(newReport.createdAt).toISOString() : new Date().toISOString(),
     };
 
-    const { reports } = await getReportsFromFile();
-    reports.unshift(newReport);
-
-    await saveReportsToFile(reports);
-
-    return NextResponse.json(newReport, { status: 201 });
+    return NextResponse.json(formatted, { status: 201 });
   } catch (error: any) {
-    console.error("Erro na rota POST /api/reports:", error);
+    console.error("Erro ao salvar relatório no MongoDB:", error);
     return NextResponse.json(
-      { error: `Erro no servidor: ${error?.message || "Falha desconhecida ao gravar arquivo"}` },
+      {
+        error: `Erro ao salvar no MongoDB: ${error?.message || "Falha desconhecida"}`,
+      },
       { status: 500 }
     );
   }

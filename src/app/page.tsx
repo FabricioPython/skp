@@ -287,7 +287,7 @@ export default function Home() {
     if (savedOnServer) {
       toast({
         title: "Relatório Salvo com Sucesso!",
-        description: "Os dados foram salvos no histórico em arquivo JSON.",
+        description: "Os dados foram salvos no banco de dados MongoDB.",
       });
       clearSession();
     } else {

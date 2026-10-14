@@ -297,7 +297,7 @@ export default function ReportsPage() {
           <div className="text-center">
             <h1 className="text-3xl font-black italic uppercase text-primary tracking-tighter">Histórico de Relatórios</h1>
             <p className="flex items-center justify-center gap-2 text-[10px] text-white/40 uppercase font-bold tracking-widest mt-1">
-              <Cloud className="h-3 w-3" /> Base de Dados em Arquivo JSON
+              <Cloud className="h-3 w-3" /> Banco de Dados MongoDB na Nuvem
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={fetchReports} className="border-white/10 text-white/70 hover:text-primary">
@@ -308,7 +308,7 @@ export default function ReportsPage() {
         {!reports || reports.length === 0 ? (
           <div className="text-center py-20 bg-card/50 rounded-xl border border-white/5">
             <FileText className="h-16 w-16 mx-auto text-white/20 mb-4" />
-            <p className="text-white/40 font-bold uppercase">Nenhum relatório encontrado no arquivo de histórico.</p>
+            <p className="text-white/40 font-bold uppercase">Nenhum relatório encontrado no banco de dados.</p>
           </div>
         ) : (
           <div className="grid gap-6">
