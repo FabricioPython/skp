@@ -54,15 +54,48 @@ export default function ReportsPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch("/api/reports", { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error("Não foi possível carregar os relatórios do arquivo JSON.");
+      
+      let serverReports: Report[] = [];
+      try {
+        const res = await fetch("/api/reports", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            serverReports = data;
+          }
+        }
+      } catch (err) {
+        console.warn("Servidor de relatórios indisponível, usando dados locais:", err);
       }
-      const data = await res.json();
-      setReports(Array.isArray(data) ? data : []);
+
+      // Lê dados do backup local
+      let localReports: Report[] = [];
+      try {
+        const localData = localStorage.getItem("stock-counter-reports-history");
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          if (Array.isArray(parsed)) {
+            localReports = parsed;
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao ler backup local:", err);
+      }
+
+      // Mescla relatórios garantindo que nenhum item se perca
+      const reportsMap = new Map<string, Report>();
+      [...serverReports, ...localReports].forEach((item) => {
+        const key = item.id || `${item.agencyNumber}-${item.reportDate}-${item.grandTotal}`;
+        if (!reportsMap.has(key)) {
+          reportsMap.set(key, item);
+        }
+      });
+
+      const combined = Array.from(reportsMap.values());
+      setReports(combined);
     } catch (err: any) {
       console.error("Erro ao carregar relatórios:", err);
-      setError("Não foi possível carregar o histórico a partir do arquivo JSON.");
+      setError("Não foi possível carregar o histórico.");
     } finally {
       setLoading(false);
     }

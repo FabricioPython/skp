@@ -241,6 +241,9 @@ export default function Home() {
       grandTotal: grandTotal.toString(),
     };
 
+    let savedOnServer = false;
+    let serverErrorMessage = "";
+
     try {
       const response = await fetch("/api/reports", {
         method: "POST",
@@ -250,26 +253,52 @@ export default function Home() {
         body: JSON.stringify(reportData),
       });
 
-      if (!response.ok) {
-        throw new Error("Falha ao salvar relatório no servidor.");
+      if (response.ok) {
+        savedOnServer = true;
+      } else {
+        try {
+          const errData = await response.json();
+          serverErrorMessage = errData?.error || `Status HTTP ${response.status}`;
+        } catch {
+          serverErrorMessage = `Status HTTP ${response.status} (${response.statusText})`;
+        }
+        console.warn("Aviso na API do servidor:", serverErrorMessage);
       }
+    } catch (netErr: any) {
+      serverErrorMessage = netErr?.message || "Servidor inacessível";
+      console.warn("Falha de rede ao contatar /api/reports:", netErr);
+    }
 
+    // Backup redundante no armazenamento local (localStorage)
+    try {
+      const localHistoryKey = "stock-counter-reports-history";
+      const existingHistory = JSON.parse(localStorage.getItem(localHistoryKey) || "[]");
+      const clientReport = {
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        ...reportData,
+        createdAt: new Date().toISOString(),
+      };
+      existingHistory.unshift(clientReport);
+      localStorage.setItem(localHistoryKey, JSON.stringify(existingHistory));
+    } catch (lsErr) {
+      console.error("Erro ao salvar no backup local:", lsErr);
+    }
+
+    if (savedOnServer) {
       toast({
         title: "Relatório Salvo com Sucesso!",
         description: "Os dados foram salvos no histórico em arquivo JSON.",
       });
-
       clearSession();
-    } catch (err) {
-      console.error("Erro ao salvar relatório: ", err);
+    } else {
       toast({
-        title: "Erro ao Salvar",
-        description: "Não foi possível gravar o relatório no histórico.",
-        variant: "destructive",
+        title: "Salvo no Histórico Local!",
+        description: "Relatório armazenado com sucesso no dispositivo." + (serverErrorMessage ? ` (${serverErrorMessage})` : ""),
       });
-    } finally {
-      setIsSaving(false);
+      clearSession();
     }
+
+    setIsSaving(false);
   };
   
   const handleIncrementClick = (cat: string) => {
